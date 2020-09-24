@@ -58,9 +58,12 @@ void FileDocument(const char* f, Document* doc){
 			abuf[r]=0;
 			STRCPY_AtoT(tbuf,abuf,r);
 			tbuf[r]=0;
+            // puts(abuf);
 			str.append(tbuf);
 		}while(r>0);
 		fclose(fh);
+
+        // std::cout << "####index file content " << str.getBuffer() << std::endl;
 
 		doc->add( *_CLNEW Field(_T("contents"), str.getBuffer(), Field::STORE_YES | Field::INDEX_TOKENIZED) );
 	}

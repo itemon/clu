@@ -21,7 +21,10 @@
 
 #include <stdio.h>
 #include <iostream>
+#include <fstream>
 #include <string.h>
+#include <libgen.h>
+#include <sstream>
 
 using namespace std;
 using namespace lucene::util;
@@ -30,6 +33,62 @@ using namespace lucene::util;
 void IndexFiles(const char* path, const char* target, const bool clearIndex);
 void SearchFiles(const char* index);
 void getStats(const char* directory);
+
+// additional read file config
+struct _IOFileConfig {
+	char* inputFile;
+	char* outputFile;
+};
+typedef struct _IOFileConfig IOFileConfig;
+
+enum pos_state_of_config {
+	pos_state_init,
+	pos_state_key,
+	pos_state_value,
+};
+
+void read_local_io_config(IOFileConfig* config, char* initDir) {
+	char* dir = dirname(initDir);
+	char* config_file = strcat(dir, "/io_config");
+	std::cout << config_file << std::endl;
+
+	std::ifstream ifs(config_file, std::ios::binary);
+	if (!ifs.is_open()) {
+		perror("can not open config file");
+		return;
+	}
+
+	std::string line;
+	size_t pos;
+	char* buf;
+	while (std::getline(ifs, line)) {
+		// std::cout << "line " << line << std::endl;
+		if (std::string::npos != (pos = line.find("=", 0))) {
+			switch (line[0])
+			{
+			case 'i': {
+				char* input = const_cast<char*>(line.substr(pos + 1).c_str());
+				char* inputCopy = (char*)malloc(strlen(input) + 1);
+				strcpy(inputCopy, input);
+				config->inputFile = input;
+				// std::cout << input << std::endl;
+				break;
+			}
+				
+
+			case 'o':
+			   config->outputFile = const_cast<char*>(line.substr(pos + 1).c_str());
+				break;
+			
+			default:
+				break;
+			}
+			
+		}
+	}
+
+	std::cout << config->inputFile << ":" << config->outputFile << std::endl;
+}
 
 int main( int32_t argc, char** argv ){
 	//Dumper Debug
@@ -41,9 +100,14 @@ int main( int32_t argc, char** argv ){
 	#endif
 
 	uint64_t str = Misc::currentTimeMillis();
+
+	IOFileConfig config;
+	read_local_io_config(&config, __FILE__);
+	std::cout << "input: " << config.inputFile << std::endl;
+
 	try{
 
-    	printf("Location of text files to be indexed: ");
+    	printf("Location of text files to be indexed[%s]: ", __FILE__);
     	char files[250];
 		char* tmp = fgets(files,250,stdin);
 		if ( tmp == NULL ) return 1;

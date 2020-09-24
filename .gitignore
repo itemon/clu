@@ -9,3 +9,5 @@ bin
 msvc
 build
 ~$*
+build-name
+.vscode
