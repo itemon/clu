@@ -47,6 +47,20 @@ enum pos_state_of_config {
 	pos_state_value,
 };
 
+inline char* make_copy_of(const char* src) {
+	char* no_const_char = const_cast<char*>(src);
+	char* heap_char = (char*)malloc(strlen(no_const_char) + 1);
+	strcpy(heap_char, no_const_char);
+	heap_char[strlen(heap_char)] = '\0';
+	return heap_char;
+}
+
+inline void destroy_io_config(IOFileConfig* conf) {
+	free(conf->inputFile);
+	free(conf->outputFile);
+	// free(conf);
+}
+
 void read_local_io_config(IOFileConfig* config, char* initDir) {
 	char* dir = dirname(initDir);
 	char* config_file = strcat(dir, "/io_config");
@@ -67,18 +81,22 @@ void read_local_io_config(IOFileConfig* config, char* initDir) {
 			switch (line[0])
 			{
 			case 'i': {
-				char* input = const_cast<char*>(line.substr(pos + 1).c_str());
-				char* inputCopy = (char*)malloc(strlen(input) + 1);
-				strcpy(inputCopy, input);
+				// char* input = const_cast<char*>(line.substr(pos + 1).c_str());
+				// char* inputCopy = (char*)malloc(strlen(input) + 1);
+				// strcpy(inputCopy, input);
+				char* input = make_copy_of(line.substr(pos + 1).c_str());
 				config->inputFile = input;
 				// std::cout << input << std::endl;
 				break;
 			}
 				
 
-			case 'o':
-			   config->outputFile = const_cast<char*>(line.substr(pos + 1).c_str());
+			case 'o': {
+				char* output = make_copy_of(line.substr(pos + 1).c_str());
+				config->outputFile = output;
 				break;
+			}
+			   
 			
 			default:
 				break;
@@ -103,21 +121,28 @@ int main( int32_t argc, char** argv ){
 
 	IOFileConfig config;
 	read_local_io_config(&config, __FILE__);
-	std::cout << "input: " << config.inputFile << std::endl;
+	std::cout << "input: " << config.inputFile << "; output: " << config.outputFile << std::endl;
 
 	try{
+		char files[250],ndx[250];
 
-    	printf("Location of text files to be indexed[%s]: ", __FILE__);
-    	char files[250];
-		char* tmp = fgets(files,250,stdin);
-		if ( tmp == NULL ) return 1;
-		files[strlen(files)-1] = 0;
-		
-		printf("Location to store the clucene index: ");
-		char ndx[250];
-		tmp = fgets(ndx,250,stdin);
-		if ( tmp == NULL ) return 1;
-		ndx[strlen(ndx)-1] = 0;
+		if (strlen(config.inputFile) > 0 && strlen(config.outputFile) > 0) {
+			// IndexFiles(config.inputFile, config.outputFile, true);
+			strcpy(files, config.inputFile);
+			strcpy(ndx, config.outputFile);
+		} else {
+			printf("Location of text files to be indexed[%s]: ", __FILE__);
+			
+			char* tmp = fgets(files,250,stdin);
+			if ( tmp == NULL ) return 1;
+			files[strlen(files)-1] = 0;
+			
+			printf("Location to store the clucene index: ");
+			
+			tmp = fgets(ndx,250,stdin);
+			if ( tmp == NULL ) return 1;
+			ndx[strlen(ndx)-1] = 0;
+		}
 
 		IndexFiles(files,ndx,true);
         getStats(ndx);
@@ -139,5 +164,7 @@ int main( int32_t argc, char** argv ){
 	//for linux, use valgrind
 
 	printf ("\n\nTime taken: %d\n\n", (int32_t)(Misc::currentTimeMillis() - str));
+	destroy_io_config(&config);
+
 	return 0;
 }

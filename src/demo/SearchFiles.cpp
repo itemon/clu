@@ -46,14 +46,11 @@ void SearchFiles(const char* index){
         }
 
         // enum all terms
-        TermEnum* termEnum = reader->terms();
-        while (termEnum->next()) {
-            const TCHAR* curTerm = termEnum->term()->text();
-            // wstring wText(curTerm->toString());
-            // string text(wText.begin(), wText.end());
-            // std::cout << "term " << text << std::endl;
-            _tprintf(_T("internal term: %s\n"), curTerm);
-        }
+        // TermEnum* termEnum = reader->terms();
+        // while (termEnum->next()) {
+        //     const TCHAR* curTerm = termEnum->term()->text();
+        //     _tprintf(_T("internal term: %s\n"), curTerm);
+        // }
 
         IndexSearcher s(reader);
 
