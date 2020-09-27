@@ -12,6 +12,7 @@
 #include <cctype>
 #include <string.h>
 #include <algorithm>
+#include <libgen.h>
 
 #include "CLucene/StdHeader.h"
 #include "CLucene/_clucene-config.h"
@@ -23,6 +24,11 @@
 #include "CLucene/util/Misc.h"
 #include "CLucene/util/StringBuffer.h"
 
+// #include "test.h"
+#include "mytest.h"
+// #include "myhtml/myhtml.h"
+#include "myhtml/api.h"
+
 using namespace std;
 using namespace lucene::index;
 using namespace lucene::analysis;
@@ -30,7 +36,100 @@ using namespace lucene::util;
 using namespace lucene::store;
 using namespace lucene::document;
 
-void FileDocument(const char* f, Document* doc){
+#define DIE(msg, ...) do { fprintf(stderr, msg, ##__VA_ARGS__); exit(EXIT_FAILURE); } while(0)
+
+struct res_html {
+    char  *html;
+    size_t size;
+};
+
+struct res_html load_html_file(const char* filename)
+{
+    FILE *fh = fopen(filename, "rb");
+    if(fh == NULL) {
+        DIE("Can't open html file: %s\n", filename);
+    }
+    
+    if(fseek(fh, 0L, SEEK_END) != 0) {
+        DIE("Can't set position (fseek) in file: %s\n", filename);
+    }
+    
+    long size = ftell(fh);
+    
+    if(fseek(fh, 0L, SEEK_SET) != 0) {
+        DIE("Can't set position (fseek) in file: %s\n", filename);
+    }
+    
+    if(size <= 0) {
+        fclose(fh);
+        
+        struct res_html res = {NULL, 0};
+        return res;
+    }
+    
+    char *html = (char*)malloc(size + 1);
+    if(html == NULL) {
+        DIE("Can't allocate mem for html file: %s\n", filename);
+    }
+    
+    size_t nread = fread(html, 1, size, fh);
+    if (nread != size) {
+        DIE("could not read %ld bytes (%ld bytes done)\n", size, nread);
+    }
+
+    fclose(fh);
+    
+    struct res_html res = {html, (size_t)size};
+    return res;
+}
+/*
+void index_html_content() {
+    // build html type
+    myhtml_t* html = myhtml_create();
+    mystatus_t html_res;
+
+    html_res = myhtml_init(html, MyHTML_OPTIONS_DEFAULT, 0, 0);
+    if (MYHTML_FAILED(html_res)) {
+        perror("can not init myhtml_t html");
+        myhtml_destroy(html);
+        return;
+    }
+
+    myhtml_tree_t* tree = myhtml_tree_create();
+    html_res = myhtml_tree_init(tree, html);
+    if (MYHTML_FAILED(html_res)) {
+        perror("can not init myhtml_t html");
+        myhtml_destroy(html);
+        myhtml_tree_destroy(tree);
+        return;
+    }
+
+    struct res_html data = load_html_file("/Users/huangwei/code/prj/serve/nginx_root/luc/mem_alloc.htm");
+    // char* html_content = "<html><head><title>11</title></head><body><p>hello world<span> is first</span></p></body></html>";
+    myhtml_parse(tree, MyENCODING_UTF_8, data.html, data.size);
+
+    myhtml_tree_node_t* body = myhtml_tree_get_node_html(tree);
+    // const char* tagname = myhtml_node_text(body, NULL);
+    myhtml_tag_id_t html_id = myhtml_node_tag_id(body);
+    size_t len = 4;
+    const char* tagname = myhtml_tag_name_by_id(tree, html_id, &len);
+    cout << tagname << endl;
+
+    char* target_tag = "p";
+    myhtml_collection_t* list = myhtml_get_nodes_by_name(tree, NULL, target_tag, strlen(target_tag), &html_res);
+    cout << "h1 list length " << list->length << " : " << list->size << endl;
+    
+    // mycore_string_t* text = myhtml_node_string(body);
+
+    // cout << html_res << " of status and before parsing html content " << html_content << endl;
+
+    myhtml_tree_destroy(tree);
+    myhtml_destroy(html);
+}*/
+
+void FileDocument(const char* f, Document* doc, myhtml_tree_t* tree){
+
+    my_test_whisper();
 
     // Add the path of the file as a field named "path".  Use an indexed and stored field, so
     // that the index stores the path, and so that the path is searchable.
@@ -47,29 +146,87 @@ void FileDocument(const char* f, Document* doc){
 
     // Here we read the data without any encoding. If you want to use special encoding
     // see the contrib/jstreams - they contain various types of stream readers
-    FILE* fh = fopen(f,"r");
-	if ( fh != NULL ){
-		StringBuffer str;
-		char abuf[1024];
-		TCHAR tbuf[1024];
-		size_t r;
-		do{
-			r = fread(abuf,1,1023,fh);
-			abuf[r]=0;
-			STRCPY_AtoT(tbuf,abuf,r);
-			tbuf[r]=0;
-            // puts(abuf);
-			str.append(tbuf);
-		}while(r>0);
-		fclose(fh);
 
-        // std::cout << "####index file content " << str.getBuffer() << std::endl;
+    /**/
 
-		doc->add( *_CLNEW Field(_T("contents"), str.getBuffer(), Field::STORE_YES | Field::INDEX_TOKENIZED) );
-	}
+    const char* ext = basename(const_cast<char*>(f));
+    if (strstr(ext, ".htm") != NULL) {
+        std::cout << "parse html file" << std::endl;
+        struct res_html res;
+        res = load_html_file(f);
+
+        if (res.size == 0) {
+            return;
+        }
+
+        myhtml_parse(tree, MyENCODING_UTF_8, res.html, res.size);
+        /*
+        myhtml_tree_node_t* html = myhtml_tree_get_node_html(tree);
+        myhtml_tag_id_t html_tag_id = myhtml_node_tag_id(html);
+
+        
+        myhtml_tree_node_t* body = myhtml_tree_get_node_body(tree);
+        size_t len;
+        const char* text = myhtml_node_text(body, &len);
+
+        std::cout << "parse html file" << std::endl;
+        std::cout << html_tag_id << " is textable " << (html_tag_id == MyHTML_TAG__TEXT || html_tag_id == MyHTML_TAG__COMMENT) << "-----" << len << std::endl;
+        // std::cout << "node id " << html_tag_id << endl;
+        size_t text_size = strlen(text);
+        TCHAR wc[text_size];
+        STRCPY_AtoT(wc, text, text_size);
+        */
+
+        char* target_name = "title";
+        mystatus_t st;
+        myhtml_collection_t* titles = myhtml_get_nodes_by_name(tree, NULL, target_name, strlen(target_name), &st);
+        if (titles != NULL && titles->size > 0) {
+            myhtml_tree_node_t* node_title = *(titles->list);
+            myhtml_tree_node_t* text_of_title = myhtml_node_child(node_title);
+
+            myhtml_tag_id_t tag_id = myhtml_node_tag_id(text_of_title);
+            assert(tag_id == MyHTML_TAG_TEXT || tag_id == MyHTML_TAG_COMMENT);
+
+            size_t len;
+            const char* text = myhtml_node_text(text_of_title, &len);
+            // std::cout << "last empty " << (text[strlen(text) - 1] == '\0') << endl;
+            size_t text_size = strlen(text);
+            TCHAR wc[text_size];
+            STRCPY_AtoT(wc, text, text_size);
+            std::cout << "title text is " << text << "------" << _tprintf(wc) << "------" << len << std::endl;
+
+            doc->add( *_CLNEW Field(_T("contents"), wc, Field::STORE_YES | Field::INDEX_TOKENIZED) );
+        }
+
+        free(res.html);      
+
+    } else {
+        std::cout << "parse normal file " << std::endl;
+
+        FILE* fh = fopen(f,"r");
+        if ( fh != NULL ){
+            StringBuffer str;
+            char abuf[1024];
+            TCHAR tbuf[1024];
+            size_t r;
+            do{
+                r = fread(abuf,1,1023,fh);
+                abuf[r]=0;
+                STRCPY_AtoT(tbuf,abuf,r);
+                tbuf[r]=0;
+                // puts(abuf);
+                str.append(tbuf);
+            }while(r>0);
+            fclose(fh);
+
+            // std::cout << "####index file content " << str.getBuffer() << std::endl;
+
+            doc->add( *_CLNEW Field(_T("contents"), str.getBuffer(), Field::STORE_YES | Field::INDEX_TOKENIZED) );
+        }
+    }
 }
 
-void indexDocs(IndexWriter* writer, const char* directory) {
+void indexDocs(IndexWriter* writer, const char* directory, myhtml_tree_t* tree) {
     vector<string> files;
     std::sort(files.begin(),files.end());
     Misc::listFiles(directory,files,true);
@@ -83,7 +240,7 @@ void indexDocs(IndexWriter* writer, const char* directory) {
         printf( "adding file %d: %s\n", ++i, path );
 
         doc.clear();
-        FileDocument( path, &doc );
+        FileDocument( path, &doc, tree);
         writer->addDocument( &doc );
         ++itr;
     }
@@ -117,7 +274,36 @@ void IndexFiles(const char* path, const char* target, const bool clearIndex){
 
 	uint64_t str = Misc::currentTimeMillis();
 
-	indexDocs(writer, path);
+    /**
+     * start to constructing html file doc index  
+     * components
+     */
+    cout << "before to index html doc" << endl;
+    myhtml_t* html = myhtml_create();
+    mystatus_t html_res;
+
+    html_res = myhtml_init(html, MyHTML_OPTIONS_DEFAULT, 0, 0);
+    if (MYHTML_FAILED(html_res)) {
+        perror("can not init myhtml_t html");
+        myhtml_destroy(html);
+        return;
+    }
+
+    myhtml_tree_t* tree = myhtml_tree_create();
+    html_res = myhtml_tree_init(tree, html);
+    if (MYHTML_FAILED(html_res)) {
+        perror("can not init myhtml_t html");
+        myhtml_destroy(html);
+        myhtml_tree_destroy(tree);
+        return;
+    }
+
+    // index_html_content();
+
+	indexDocs(writer, path, tree);
+
+    myhtml_tree_destroy(tree);
+    myhtml_destroy(html);
 	
     // Make the index use as little files as possible, and optimize it
     writer->setUseCompoundFile(true);

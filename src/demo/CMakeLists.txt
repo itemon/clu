@@ -9,6 +9,12 @@ INCLUDE_DIRECTORIES( ${clucene_SOURCE_DIR}/src/core )
 
 file(GLOB_RECURSE demo_HEADERS ${CMAKE_SOURCE_DIR}/test/*.h)
 
+SET(LIB_MY_HTML_BASE ${clucene_SOURCE_DIR}/../myhtml)
+SET(LIB_MY_HTML ${LIB_MY_HTML_BASE}/lib/libmyhtml_static.a)
+
+INCLUDE_DIRECTORIES(${LIB_MY_HTML_BASE}/include)
+#file(GLOB_RECURSE myhtml_HEADERS ${LIB_MY_HTML_BASE}/include/*.h)
+
 ADD_EXECUTABLE(cl_demo EXCLUDE_FROM_ALL
 #./DeleteFiles.cpp
 ./IndexFiles.cpp
@@ -20,4 +26,5 @@ ADD_EXECUTABLE(cl_demo EXCLUDE_FROM_ALL
 ${demo_HEADERS}
 )
 
-TARGET_LINK_LIBRARIES(cl_demo clucene-core clucene-shared ${EXTRA_LIBS})
+
+TARGET_LINK_LIBRARIES(cl_demo clucene-core clucene-shared my_test ${LIB_MY_HTML} ${EXTRA_LIBS})

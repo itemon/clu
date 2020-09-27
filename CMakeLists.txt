@@ -37,6 +37,8 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 Include (CLuceneDocs)
 Include (FindThreads)
 
+Include (${CMAKE_SOURCE_DIR}/src/myhtml/myhtml.cmake)
+
 IF(NOT CMAKE_BUILD_TYPE)
     SET(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING
       "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
@@ -147,6 +149,8 @@ INCLUDE_DIRECTORIES( ${clucene_SOURCE_DIR}/src/shared )
 INCLUDE_DIRECTORIES( ${clucene_BINARY_DIR}/src/shared )
 INCLUDE_DIRECTORIES( ${clucene_SOURCE_DIR}/src/core )
 
+INCLUDE_DIRECTORIES( ${clucene_SOURCE_DIR}/src/mytest )
+
 #set boost path. we need src/ext to be defined before this works...
 Include (CLuceneBoost)
 GET_BOOST_INCLUDE_PATH(_CL_BOOST_INCLUDE_PATH)
@@ -157,6 +161,10 @@ ADD_SUBDIRECTORY (src/ext)
 ADD_SUBDIRECTORY (src/shared)
 ADD_SUBDIRECTORY (src/core)
 ADD_SUBDIRECTORY (src/test)
+
+ADD_SUBDIRECTORY (src/mytest)
+ADD_SUBDIRECTORY (src/myhtml)
+
 ADD_SUBDIRECTORY (src/demo EXCLUDE_FROM_ALL)
 IF ( BUILD_CONTRIBS )
   ADD_SUBDIRECTORY (src/contribs EXCLUDE_FROM_ALL)
