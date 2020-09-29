@@ -127,6 +127,42 @@ void index_html_content() {
     myhtml_destroy(html);
 }*/
 
+void loop_node(Document* doc, myhtml_tree_t* tree, myhtml_tree_node_t* node, StringBuffer* buf) {
+    size_t len;
+    myhtml_tag_id_t tag_id = myhtml_node_tag_id(node);
+    switch (tag_id)
+    {
+    case MyHTML_TAG__COMMENT:
+    case MyHTML_TAG__UNDEF:
+    case MyHTML_TAG__END_OF_FILE:
+        cout << "dummy node" << endl;
+        break;
+
+    case MyHTML_TAG__TEXT: {
+        const char* text = myhtml_node_text(node, &len);
+        
+        cout << "==============found text line " << len << ":" << strlen(text) << endl;
+        cout << text << endl;
+        cout << "==============\\/end found text line======" << endl;
+
+        TCHAR text_buf[len];
+        STRCPY_AtoT(text_buf, text, len);
+        buf->append(text_buf);
+        break;
+    }
+        
+    default: {
+        myhtml_tree_node_t* child = myhtml_node_child(node);
+        while (child != NULL) {
+            loop_node(doc, tree, child, buf);
+            child = myhtml_node_next(child);
+        }
+        break;
+    } 
+    
+    }
+}
+
 void FileDocument(const char* f, Document* doc, myhtml_tree_t* tree){
 
     my_test_whisper();
@@ -177,7 +213,7 @@ void FileDocument(const char* f, Document* doc, myhtml_tree_t* tree){
         STRCPY_AtoT(wc, text, text_size);
         */
 
-        char* target_name = "title";
+        /*char* target_name = "title";
         mystatus_t st;
         myhtml_collection_t* titles = myhtml_get_nodes_by_name(tree, NULL, target_name, strlen(target_name), &st);
         if (titles != NULL && titles->size > 0) {
@@ -196,7 +232,14 @@ void FileDocument(const char* f, Document* doc, myhtml_tree_t* tree){
             std::cout << "title text is " << text << "------" << _tprintf(wc) << "------" << len << std::endl;
 
             doc->add( *_CLNEW Field(_T("contents"), wc, Field::STORE_YES | Field::INDEX_TOKENIZED) );
-        }
+        }*/
+
+        StringBuffer buf;
+        loop_node(doc, tree, myhtml_tree_get_node_html(tree), &buf);
+
+        doc->add( *_CLNEW Field(_T("contents"), buf.getBuffer(), Field::STORE_YES | Field::INDEX_TOKENIZED) );
+        cout << "[final " << buf.length() << "]:" << endl;
+        _tprintf(buf.getBuffer());
 
         free(res.html);      
 
