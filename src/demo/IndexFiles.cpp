@@ -141,12 +141,15 @@ void loop_node(Document* doc, myhtml_tree_t* tree, myhtml_tree_node_t* node, Str
     case MyHTML_TAG__TEXT: {
         const char* text = myhtml_node_text(node, &len);
         
-        cout << "==============found text line " << len << ":" << strlen(text) << endl;
+        cout << "<<<<<found text line " << len << ":" << strlen(text) << endl;
         cout << text << endl;
-        cout << "==============\\/end found text line======" << endl;
 
-        TCHAR text_buf[len];
+        TCHAR text_buf[len + 1];
         STRCPY_AtoT(text_buf, text, len);
+        text_buf[len] = '\0';
+        cout << ":"<<endl;
+        cout << _tprintf(text_buf) << endl;
+        cout << ">>>>>" << endl;
         buf->append(text_buf);
         break;
     }
