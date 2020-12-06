@@ -24,10 +24,13 @@
 #include "CLucene/util/Misc.h"
 #include "CLucene/util/StringBuffer.h"
 
+#include "CLucene/analysis/LanguageBasedAnalyzer.h"
+
 // #include "test.h"
 #include "mytest.h"
 // #include "myhtml/myhtml.h"
 #include "myhtml/api.h"
+#include "tool.h"
 
 using namespace std;
 using namespace lucene::index;
@@ -130,6 +133,8 @@ void index_html_content() {
 void loop_node(Document* doc, myhtml_tree_t* tree, myhtml_tree_node_t* node, StringBuffer* buf) {
     size_t len;
     myhtml_tag_id_t tag_id = myhtml_node_tag_id(node);
+    bool is_heading = false;
+
     switch (tag_id)
     {
     case MyHTML_TAG__COMMENT:
@@ -141,24 +146,48 @@ void loop_node(Document* doc, myhtml_tree_t* tree, myhtml_tree_node_t* node, Str
     case MyHTML_TAG__TEXT: {
         const char* text = myhtml_node_text(node, &len);
         
-        cout << "<<<<<found text line " << len << ":" << strlen(text) << endl;
+        cout << _tprintf(_T("黄伟")) << "index node text of <";
         cout << text << endl;
 
         TCHAR text_buf[len + 1];
         STRCPY_AtoT(text_buf, text, len);
         text_buf[len] = '\0';
-        cout << ":"<<endl;
-        cout << _tprintf(text_buf) << endl;
-        cout << ">>>>>" << endl;
+        cout << _tprintf(text_buf) << ">" << endl;
+        
         buf->append(text_buf);
+
         break;
     }
         
+    case MyHTML_TAG_H1:
+    case MyHTML_TAG_H2:
+    case MyHTML_TAG_H3:
+    case MyHTML_TAG_H4:
+    case MyHTML_TAG_H5:
+    case MyHTML_TAG_H6: {
+        is_heading = true;
+        // cout << "================heading===============" << endl;
+        // break;
+    }
     default: {
         myhtml_tree_node_t* child = myhtml_node_child(node);
-        while (child != NULL) {
+        /**/if (is_heading) {
+           StringBuffer heading_buf;
+           while (child != NULL) {
+            loop_node(doc, tree, child, &heading_buf);
+            child = myhtml_node_next(child);
+           }
+           cout << "===heading buffer:"<< endl;
+           cout << _tprintf(heading_buf.getBuffer()) << endl;
+
+           doc->add( *_CLNEW Field(_T("heading"), heading_buf.getBuffer(), Field::STORE_YES | Field::INDEX_TOKENIZED) );
+           TCHAR heading_degree = tag_id - MyHTML_TAG_H1;
+           doc->add( *_CLNEW Field(_T("degree"), &heading_degree, Field::STORE_YES | Field::INDEX_UNTOKENIZED) );
+        } else {
+           while (child != NULL) {
             loop_node(doc, tree, child, buf);
             child = myhtml_node_next(child);
+           }
         }
         break;
     } 
@@ -238,7 +267,9 @@ void FileDocument(const char* f, Document* doc, myhtml_tree_t* tree){
         }*/
 
         StringBuffer buf;
-        loop_node(doc, tree, myhtml_tree_get_node_html(tree), &buf);
+        loop_node(doc, 
+          tree, myhtml_tree_get_node_html(tree), 
+          &buf);
 
         doc->add( *_CLNEW Field(_T("contents"), buf.getBuffer(), Field::STORE_YES | Field::INDEX_TOKENIZED) );
         cout << "[final " << buf.length() << "]:" << endl;
@@ -258,7 +289,10 @@ void FileDocument(const char* f, Document* doc, myhtml_tree_t* tree){
             do{
                 r = fread(abuf,1,1023,fh);
                 abuf[r]=0;
-                STRCPY_AtoT(tbuf,abuf,r);
+                
+                // STRCPY_AtoT(tbuf,abuf,r);
+                r = convert_multi_byte_to_wchar(abuf, tbuf);
+
                 tbuf[r]=0;
                 // puts(abuf);
                 str.append(tbuf);
@@ -267,7 +301,19 @@ void FileDocument(const char* f, Document* doc, myhtml_tree_t* tree){
 
             // std::cout << "####index file content " << str.getBuffer() << std::endl;
 
-            doc->add( *_CLNEW Field(_T("contents"), str.getBuffer(), Field::STORE_YES | Field::INDEX_TOKENIZED) );
+            TCHAR sythesized_buf[9] = {
+                0x9ec4,
+                0x4f1f,
+                0x20,
+                0x73, 
+                0x74, 
+                0x6f, 
+                0x72, 
+                0x79,
+                0x0,
+            };
+
+            doc->add( *_CLNEW Field(_T("contents"), str.getBuffer()/*sythesized_buf*/, Field::STORE_YES | Field::INDEX_TOKENIZED) );
         }
     }
 }
@@ -277,6 +323,9 @@ void indexDocs(IndexWriter* writer, const char* directory, myhtml_tree_t* tree) 
     std::sort(files.begin(),files.end());
     Misc::listFiles(directory,files,true);
     vector<string>::iterator itr = files.begin();
+
+    setlocale(LC_ALL, "en_US.UTF-8");
+    cout << "local " << setlocale(LC_ALL, NULL) << endl;
     
     // Re-use the document object
     Document doc;
@@ -293,7 +342,9 @@ void indexDocs(IndexWriter* writer, const char* directory, myhtml_tree_t* tree) 
 }
 void IndexFiles(const char* path, const char* target, const bool clearIndex){
 	IndexWriter* writer = NULL;
-	lucene::analysis::WhitespaceAnalyzer an;
+	// lucene::analysis::WhitespaceAnalyzer an;
+    lucene::analysis::LanguageBasedAnalyzer an;
+    an.setLanguage(_T("cjk"));
 	
 	if ( !clearIndex && IndexReader::indexExists(target) ){
 		if ( IndexReader::isLocked(target) ){
