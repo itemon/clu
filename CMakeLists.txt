@@ -135,6 +135,7 @@ IF ( CMAKE_COMPILER_IS_GNUCC )
    ENDIF ( ENABLE_ANSI_MODE )
 ENDIF(CMAKE_COMPILER_IS_GNUCC) 
 
+OPTION(ENABLE_BUILD_FOR_XCODE "build for xcode project" ON)
 
 #Single output directory for building all executables and libraries.
 SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE PATH "Executable Output Directory" FORCE)

@@ -198,6 +198,7 @@ void loop_node(Document* doc, myhtml_tree_t* tree, myhtml_tree_node_t* node, Str
 void FileDocument(const char* f, Document* doc, myhtml_tree_t* tree){
 
     my_test_whisper();
+    cout << clu_str_num() << endl;
 
     // Add the path of the file as a field named "path".  Use an indexed and stored field, so
     // that the index stores the path, and so that the path is searchable.
