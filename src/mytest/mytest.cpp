@@ -63,10 +63,10 @@ extern "C" {
       IndexReader::unlock(index_store_dir);
     }
 
-    LanguageBasedAnalyzer an;
-    an.setLanguage(_T("cjk"));
+    LanguageBasedAnalyzer* an = _CLNEW LanguageBasedAnalyzer(_T("cjk"));
+    // an.setLanguage(_T("cjk"));
 
-    index_writer = _CLNEW IndexWriter(index_store_dir, &an, !has_index);
+    index_writer = _CLNEW IndexWriter(index_store_dir, an, !has_index);
     index_writer->setMaxFieldLength(0x7FFFFFFFL);
     index_writer->setUseCompoundFile(false);
 
@@ -142,6 +142,7 @@ extern "C" {
 
   EXPORT void clu_free_index_handler(CLuceneIndexHandler* handler) {
     CAST_HANDLER(handler);
+    _CLLDELETE(index_writer->getAnalyzer());
     index_writer->close();
     _CLLDELETE(index_writer);
   }
