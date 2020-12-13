@@ -197,9 +197,6 @@ void loop_node(Document* doc, myhtml_tree_t* tree, myhtml_tree_node_t* node, Str
 
 void FileDocument(const char* f, Document* doc, myhtml_tree_t* tree){
 
-    my_test_whisper();
-    cout << clu_str_num() << endl;
-
     // Add the path of the file as a field named "path".  Use an indexed and stored field, so
     // that the index stores the path, and so that the path is searchable.
     TCHAR tf[CL_MAX_DIR];
@@ -342,6 +339,13 @@ void indexDocs(IndexWriter* writer, const char* directory, myhtml_tree_t* tree) 
     }
 }
 void IndexFiles(const char* path, const char* target, const bool clearIndex){
+
+    my_test_whisper();
+    cout << clu_str_num() << endl;
+    CLuceneIndexHandler* h = clu_get_index_handler("/Users/huangwei/code/prj/serve/nginx_root/clu_idx");
+    clu_add_doc_to_index_handler(h, "/Users/huangwei/code/prj/serve/nginx_root/zh");
+    clu_free_index_handler(h);
+    
 	IndexWriter* writer = NULL;
 	// lucene::analysis::WhitespaceAnalyzer an;
     lucene::analysis::LanguageBasedAnalyzer an;

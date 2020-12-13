@@ -7,7 +7,7 @@ set(CMAKE_VERBOSE_MAKEFILE on)
 
 ADD_DEFINITIONS(-DMYTEST_INC_FINGER=on)
 
-SET(MY_TEST_ALL_FILES ./mytest.cpp)
+SET(MY_TEST_ALL_FILES ./mytest.cpp ./tool.cpp)
 
 SET ( clucene_contrib_extra_libs clucene-contribs-lib clucene-core clucene-shared ${EXTRA_LIBS} )
 
