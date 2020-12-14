@@ -106,7 +106,7 @@ extern "C" {
     return content;
   }
 
-  void _writing_index(IndexWriter* index_writer, Document* doc, const char* cur) {
+  void _writing_index(IndexWriter* index_writer, Document* doc, const char* cur, CLuceneDocConfig* config) {
     size_t len;
     len = strlen(cur);
     TCHAR wchr[len + 1];
@@ -126,7 +126,7 @@ extern "C" {
     index_writer->addDocument(doc);
   }
 
-  EXPORT void clu_add_doc_to_index_handler(CLuceneIndexHandler* handler, const char* dir) {
+  EXPORT void clu_add_doc_to_index_handler(CLuceneIndexHandler* handler, const char* dir, CLuceneDocConfig* config) {
     CAST_HANDLER(handler);
     vector<string> files;
     Misc::listFiles(dir, files, true);
@@ -138,7 +138,7 @@ extern "C" {
 
     while (leading != files.end()) {
       cur = _read_file_content(leading->c_str());
-      _writing_index(index_writer, &doc, cur);
+      _writing_index(index_writer, &doc, cur, config);
 
       if (cur != 0)
         free(cur);

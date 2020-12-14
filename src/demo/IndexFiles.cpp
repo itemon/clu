@@ -343,9 +343,10 @@ void IndexFiles(const char* path, const char* target, const bool clearIndex){
     my_test_whisper();
     cout << clu_str_num() << endl;
     CLuceneIndexHandler* h = clu_get_index_handler("/Users/huangwei/code/prj/serve/nginx_root/clu_idx");
-    clu_add_doc_to_index_handler(h, "/Users/huangwei/code/prj/serve/nginx_root/zh");
+    CLuceneDocConfig doc_config;
+    clu_add_doc_to_index_handler(h, "/Users/huangwei/code/prj/serve/nginx_root/zh", &doc_config);
     clu_free_index_handler(h);
-    
+
 	IndexWriter* writer = NULL;
 	// lucene::analysis::WhitespaceAnalyzer an;
     lucene::analysis::LanguageBasedAnalyzer an;
