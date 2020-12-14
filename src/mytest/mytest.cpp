@@ -106,6 +106,26 @@ extern "C" {
     return content;
   }
 
+  void _writing_index(IndexWriter* index_writer, Document* doc, const char* cur) {
+    size_t len;
+    len = strlen(cur);
+    TCHAR wchr[len + 1];
+    len = convert_multi_byte_to_wchar(cur, wchr);
+    wchr[len] = '\0';
+
+    doc->clear();
+
+    doc->add( 
+      *_CLNEW Field(_T("contents"), wchr, Field::STORE_YES | Field::INDEX_TOKENIZED)
+    );
+
+    doc->add(
+      *_CLNEW Field(_T("lib"), _T("vue"), Field::STORE_YES)
+    );
+
+    index_writer->addDocument(doc);
+  }
+
   EXPORT void clu_add_doc_to_index_handler(CLuceneIndexHandler* handler, const char* dir) {
     CAST_HANDLER(handler);
     vector<string> files;
@@ -118,15 +138,7 @@ extern "C" {
 
     while (leading != files.end()) {
       cur = _read_file_content(leading->c_str());
-      len = strlen(cur);
-      TCHAR wchr[len + 1];
-      len = convert_multi_byte_to_wchar(cur, wchr);
-      wchr[len] = '\0';
-
-      doc.clear();
-      doc.add( *_CLNEW Field(_T("contents"), wchr, Field::STORE_YES | Field::INDEX_TOKENIZED));
-
-      index_writer->addDocument(&doc);
+      _writing_index(index_writer, &doc, cur);
 
       if (cur != 0)
         free(cur);
@@ -142,7 +154,8 @@ extern "C" {
 
   EXPORT void clu_free_index_handler(CLuceneIndexHandler* handler) {
     CAST_HANDLER(handler);
-    _CLLDELETE(index_writer->getAnalyzer());
+    if (index_writer->getAnalyzer())
+      _CLLDELETE(index_writer->getAnalyzer());
     index_writer->close();
     _CLLDELETE(index_writer);
   }
