@@ -15,7 +15,7 @@ struct _CLuceneIndexHandler {};
 typedef struct _CLuceneIndexHandler CLuceneIndexHandler;
 
 struct _CLuceneDocTag {
-  char* name, value;
+  char *name, *value;
 };
 typedef _CLuceneDocTag CLuceneDocTag;
 

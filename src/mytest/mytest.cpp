@@ -106,6 +106,12 @@ extern "C" {
     return content;
   }
 
+#define CONVERT_CHR_TO_WCHAR(VAR_SUFFIX) \
+  len = strlen(entity);\
+  TCHAR entity_wchr_##VAR_SUFFIX[len + 1];\
+  len = convert_multi_byte_to_wchar(entity, entity_wchr_##VAR_SUFFIX);\
+  entity_wchr_##VAR_SUFFIX[len] = '\0';
+
   void _writing_index(IndexWriter* index_writer, Document* doc, const char* cur, CLuceneDocConfig* config) {
     size_t len;
     len = strlen(cur);
@@ -119,9 +125,20 @@ extern "C" {
       *_CLNEW Field(_T("contents"), wchr, Field::STORE_YES | Field::INDEX_TOKENIZED)
     );
 
-    doc->add(
-      *_CLNEW Field(_T("lib"), _T("vue"), Field::STORE_YES)
-    );
+    if (config != NULL && config->tag_size > 0) {
+      char* entity;
+      for (int i = 0; i < config->tag_size; ++i) {
+        entity = config->tags[i].name;
+        CONVERT_CHR_TO_WCHAR(name)
+
+        entity = config->tags[i].value;
+        CONVERT_CHR_TO_WCHAR(value)
+
+        doc->add(
+          *_CLNEW Field(entity_wchr_name, entity_wchr_value, Field::STORE_YES)
+        );
+      }
+    }
 
     index_writer->addDocument(doc);
   }
