@@ -132,8 +132,12 @@ int main( int32_t argc, char** argv ){
                 0x0,
             };
 
-    setlocale(LC_ALL, "en_US.UTF-8");
-    cout << "local " << setlocale(LC_ALL, NULL) << endl;
+    cout << "before setting locale, previous locale is " << setlocale(LC_ALL, NULL) << endl;
+    setlocale(LC_ALL, "");//zh_CN.UTF-8
+	cout << "after setting local to user prefered, current local is " << setlocale(LC_ALL, NULL) << endl;
+	char* mb = convert_wchar_to_mb(sythesized_buf);
+	cout << "mb=" << mb << "; strlen=" << strlen(mb) << endl;
+	free(mb);
 
 	char* index_dir = (char*)"/Users/huangwei/code/prj/serve/nginx_root/clu_idx";
 	cout << clu_str_num() << endl;
@@ -159,8 +163,12 @@ int main( int32_t argc, char** argv ){
 
 	CLuceneSearchHandler* sh = clu_get_searcher(index_dir, NULL);
 	enum CLuError err;
-	clu_search(sh, "contents:黄伟, AND contents:文字,", &err);//contents:黄伟, OR lib_mod:vue,
+	CLuceneSearchResults* srlts = clu_search(sh, "contents:黄伟, AND contents:文字,", &err);//contents:黄伟, OR lib_mod:vue,
+
+	cout << "search results, size=" << srlts->len << "; results[0].name = " << srlts->list[0].path << endl;
+
 	clu_free_searcher(sh);
+	clu_free_search_results(srlts);
 
 	uint64_t str = Misc::currentTimeMillis();
 

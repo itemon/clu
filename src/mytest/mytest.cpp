@@ -53,7 +53,7 @@ EXPORT void my_test_whisper() {
 
 extern "C" {
   EXPORT const char* clu_str_num() {
-    return "1.0.0";
+    return _CL_VERSION;
   }
 
   EXPORT CLuceneIndexHandler* clu_get_index_handler(const char* index_store_dir) {
@@ -257,7 +257,11 @@ extern "C" {
     size_t i = 0;
     while (i < results->len) {
       CLuceneSearchResult r = results->list[i];
-      free(r.name);
+      // std::cout << "start to free here " << r.path << std::endl;
+      if (r.name != NULL)
+        free(r.name);
+      if (r.path != NULL)
+        free(r.path);
       ++i;
     }
     free(results->list);
@@ -286,16 +290,27 @@ extern "C" {
     Hits* h = s->search(q);
     len = h->length();
 
+    const TCHAR* p;
+    // CLuceneSearchResult* item;
+    CLuceneSearchResult *items = (CLuceneSearchResult*)malloc(sizeof(CLuceneSearchResult) * len);
     for (size_t i = 0; i < len; i++) {
       Document& doc = h->doc(i);
-      const TCHAR* p = doc.get(_T("path"));
-      _tprintf(_T("score: %f, doc: %s\n"), h->score(i), p);
-      _tprintf(p);
+      p = doc.get(_T("path"));
+      // _tprintf(p);
+
+      // item = (CLuceneSearchResult*)malloc(sizeof(CLuceneSearchResult));
+      // item->path = convert_wchar_to_mb((TCHAR*)p);
+      // items[i] = *item;
+      items[i].path = convert_wchar_to_mb((TCHAR*)p);
     }
+
+    CLuceneSearchResults* rlts = (CLuceneSearchResults*)malloc(sizeof(CLuceneSearchResults));
+    rlts->len = len;
+    rlts->list = items;
 
     _CLLDELETE(h);
     _CLLDELETE(q);
     
-    return NULL;
+    return rlts;
   }
 }

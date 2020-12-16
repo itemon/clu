@@ -30,6 +30,10 @@ char* convert_wchar_to_mb(TCHAR* wchr) {
   int ret;
   char cur[3];
 
+  if (wchr == NULL) {
+    return NULL;
+  }
+
   wctomb(nullptr, 0);
   while (*wchr != '\0') {
     ret = wctomb(cur, *wchr);
