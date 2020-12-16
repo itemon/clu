@@ -37,8 +37,9 @@ void getStats(const char* directory){
 	int32_t nterms;
 	for (nterms = 0; te->next() == true; nterms++) {
             /* empty */
+			const TCHAR* chr = te->term(true)->text();
       _tprintf(_T("term %s\n"),
-          te->term(true)->text());
+          chr);
     }
 	printf("Term count: %d\n\n", nterms );
 	_CLLDELETE(te);

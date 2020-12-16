@@ -340,19 +340,6 @@ void indexDocs(IndexWriter* writer, const char* directory, myhtml_tree_t* tree) 
 }
 void IndexFiles(const char* path, const char* target, const bool clearIndex){
     my_test_whisper();
-    cout << clu_str_num() << endl;
-
-    CLuceneIndexHandler* h = clu_get_index_handler("/Users/huangwei/code/prj/serve/nginx_root/clu_idx");
-    CLuceneDocTag tags[1] = {
-      {.name = (char*)"lib_mod", .value = (char*)"vue"},
-    };
-    CLuceneDocConfig doc_config = {
-      .tags = tags,
-      .tag_size = 1
-    };
-    clu_add_doc_to_index_handler(h, "/Users/huangwei/code/prj/serve/nginx_root/zh", &doc_config);
-    clu_optimize_index_handler(h);
-    clu_free_index_handler(h);
 
 	IndexWriter* writer = NULL;
 	// lucene::analysis::WhitespaceAnalyzer an;

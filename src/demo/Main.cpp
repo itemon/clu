@@ -26,6 +26,9 @@
 #include <libgen.h>
 #include <sstream>
 
+#include "mytest.h"
+#include "tool.h"
+
 using namespace std;
 using namespace lucene::util;
 
@@ -117,8 +120,41 @@ int main( int32_t argc, char** argv ){
 	#endif
 	#endif
 
+
+    setlocale(LC_ALL, "en_US.UTF-8");
+    cout << "local " << setlocale(LC_ALL, NULL) << endl;
+	
+
+	char* index_dir = (char*)"/Users/huangwei/code/prj/serve/nginx_root/clu_idx";
+	cout << clu_str_num() << endl;
+
+    CLuceneIndexHandler* h = clu_get_index_handler(index_dir);
+    CLuceneDocTag tags[1] = {
+      {.name = (char*)"lib_mod", .value = (char*)"vue"},
+    };
+    CLuceneDocConfig doc_config = {
+      .tags = tags,
+      .tag_size = 1
+    };
+
+	char* files_dir = (char*)"/Users/huangwei/code/prj/serve/nginx_root/zh";
+
+    clu_add_doc_to_index_handler(h, files_dir, &doc_config);
+    clu_optimize_index_handler(h);
+    clu_free_index_handler(h);
+
+	// getStats(index_dir);
+
+	clu_list_all_terms(index_dir);
+
+	CLuceneSearchHandler* sh = clu_get_searcher(index_dir, NULL);
+	clu_search(sh, "contents:requirements || lib_mod:vue", nullptr);
+	clu_free_searcher(sh);
+
 	uint64_t str = Misc::currentTimeMillis();
 
+    /*
+	
 	IOFileConfig config;
 	read_local_io_config(&config, __FILE__);
 	std::cout << "input: " << config.inputFile << "; output: " << config.outputFile << std::endl;
@@ -149,11 +185,14 @@ int main( int32_t argc, char** argv ){
         SearchFiles(ndx);
         //DeleteFiles(ndx);
 
+		destroy_io_config(&config);
+
     }catch(CLuceneError& err){
         printf("Error: %s\n", err.what());
     }catch(...){
         printf("Unknown error\n");
     }
+*/
 
 	_lucene_shutdown(); //clears all static memory
     //print lucenebase debug
@@ -164,7 +203,6 @@ int main( int32_t argc, char** argv ){
 	//for linux, use valgrind
 
 	printf ("\n\nTime taken: %d\n\n", (int32_t)(Misc::currentTimeMillis() - str));
-	destroy_io_config(&config);
 
 	return 0;
 }
