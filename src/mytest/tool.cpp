@@ -24,3 +24,23 @@ size_t convert_multi_byte_to_wchar(const char* src, TCHAR* dest) {
     }
     return c;
 }
+
+char* convert_wchar_to_mb(TCHAR* wchr) {
+  std::string dat;
+  int ret;
+  char cur[3];
+
+  wctomb(nullptr, 0);
+  while (*wchr != '\0') {
+    ret = wctomb(cur, *wchr);
+    if (ret <= 0)
+      break;
+    dat.insert(dat.size(), cur, ret);
+    wchr++;
+  }
+
+  char* result = (char*)malloc(dat.size() + 1);
+  strncpy(result, dat.c_str(), dat.size());
+
+  return result;
+}

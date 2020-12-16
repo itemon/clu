@@ -120,15 +120,25 @@ int main( int32_t argc, char** argv ){
 	#endif
 	#endif
 
+	TCHAR sythesized_buf[9] = {
+                0x9ec4,
+                0x4f1f,
+                0x20,
+                0x73, 
+                0x74, 
+                0x6f, 
+                0x72, 
+                0x79,
+                0x0,
+            };
 
     setlocale(LC_ALL, "en_US.UTF-8");
     cout << "local " << setlocale(LC_ALL, NULL) << endl;
-	
 
 	char* index_dir = (char*)"/Users/huangwei/code/prj/serve/nginx_root/clu_idx";
 	cout << clu_str_num() << endl;
 
-    CLuceneIndexHandler* h = clu_get_index_handler(index_dir);
+    /**/CLuceneIndexHandler* h = clu_get_index_handler(index_dir);
     CLuceneDocTag tags[1] = {
       {.name = (char*)"lib_mod", .value = (char*)"vue"},
     };
@@ -148,7 +158,8 @@ int main( int32_t argc, char** argv ){
 	clu_list_all_terms(index_dir);
 
 	CLuceneSearchHandler* sh = clu_get_searcher(index_dir, NULL);
-	clu_search(sh, "contents:requirements || lib_mod:vue", nullptr);
+	enum CLuError err;
+	clu_search(sh, "contents:黄伟, AND contents:文字,", &err);//contents:黄伟, OR lib_mod:vue,
 	clu_free_searcher(sh);
 
 	uint64_t str = Misc::currentTimeMillis();

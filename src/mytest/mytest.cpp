@@ -53,36 +53,6 @@ EXPORT void my_test_whisper() {
 
 extern "C" {
   EXPORT const char* clu_str_num() {
-    /*LanguageBasedAnalyzer an;
-    an.setLanguage(_T("cjk"));
-    IndexWriter* index_writer = _CLNEW IndexWriter("/Users/huangwei/code/prj/serve/nginx_root/clu_idx", &an, true);
-    index_writer->setMaxFieldLength(0x7FFFFFFFL);
-    index_writer->setUseCompoundFile(false);
-
-    Document doc;
-    doc.clear();
-    TCHAR sythesized_buf[9] = {
-                0x9ec4,
-                0x4f1f,
-                0x20,
-                0x73, 
-                0x74, 
-                0x6f, 
-                0x72, 
-                0x79,
-                0x0,
-            };
-
-    doc.add( *_CLNEW Field(_T("contents"), sythesized_buf, Field::STORE_YES | Field::INDEX_TOKENIZED) );
-    index_writer->addDocument(&doc);
-
-    index_writer->setUseCompoundFile(true);
-    index_writer->optimize();
-	
-    // Close and clean up
-    index_writer->close();
-	  _CLLDELETE(index_writer);*/
-
     return "1.0.0";
   }
 
@@ -98,7 +68,7 @@ extern "C" {
     LanguageBasedAnalyzer* an = _CLNEW LanguageBasedAnalyzer(_T("cjk"));
     // StandardAnalyzer* san = _CLNEW StandardAnalyzer();
 
-    index_writer = _CLNEW IndexWriter(index_store_dir, an, !has_index);
+    index_writer = _CLNEW IndexWriter(index_store_dir, an, /*!has_index*/true);
     index_writer->setMaxFieldLength(0x7FFFFFFFL);
     index_writer->setUseCompoundFile(false);
 
@@ -138,35 +108,51 @@ extern "C" {
     return content;
   }
 
-#define CONVERT_CHR_TO_WCHAR(VAR_SUFFIX) \
+/*#define CONVERT_CHR_TO_WCHAR(VAR_SUFFIX) \
   len = strlen(entity);\
   TCHAR entity_wchr_##VAR_SUFFIX[len + 1];\
   len = convert_multi_byte_to_wchar(entity, entity_wchr_##VAR_SUFFIX);\
-  entity_wchr_##VAR_SUFFIX[len] = '\0';
+  entity_wchr_##VAR_SUFFIX[len] = '\0';*/
+
+#define CVT_CHR_TO_WCHAR(entity, VAR_SUFFIX) \
+  len = strlen(entity);\
+  TCHAR wchr_##VAR_SUFFIX[len + 1];\
+  len = convert_multi_byte_to_wchar(entity, wchr_##VAR_SUFFIX);\
+  wchr_##VAR_SUFFIX[len] = '\0';
 
   // writing index to doc
   void _writing_index(Document* doc, const char* cur, CLuceneDocConfig* config) {
     size_t len;
-    len = strlen(cur);
-    TCHAR wchr[len + 1];
-    len = convert_multi_byte_to_wchar(cur, wchr);
-    wchr[len] = '\0';
+    // len = strlen(cur);
+    // TCHAR wchr[len + 1];
+    // len = convert_multi_byte_to_wchar(cur, wchr);
+    // wchr[len] = '\0';
+
+    CVT_CHR_TO_WCHAR(cur, content)
 
     doc->add( 
-      *_CLNEW Field(_T("contents"), wchr, Field::STORE_YES | Field::INDEX_TOKENIZED)
+      *_CLNEW Field(_T("contents"), wchr_content, Field::STORE_YES | Field::INDEX_TOKENIZED)
     );
 
     if (config != NULL && config->tag_size > 0) {
       char* entity;
       for (int i = 0; i < config->tag_size; ++i) {
         entity = config->tags[i].name;
-        CONVERT_CHR_TO_WCHAR(name)
+        CVT_CHR_TO_WCHAR(entity, name)
+        // len = strlen(entity); 
+        // TCHAR entity_wchr_name[len + 1]; 
+        // len = convert_multi_byte_to_wchar(entity, entity_wchr_name); 
+        // entity_wchr_name[len] = '\0';
 
         entity = config->tags[i].value;
-        CONVERT_CHR_TO_WCHAR(value)
+        CVT_CHR_TO_WCHAR(entity, value)
+        // len = strlen(entity); 
+        // TCHAR entity_wchr_value[len + 1]; 
+        // len = convert_multi_byte_to_wchar(entity, entity_wchr_value); 
+        // entity_wchr_value[len] = '\0';
 
         doc->add(
-          *_CLNEW Field(entity_wchr_name, entity_wchr_value, Field::STORE_YES)
+          *_CLNEW Field(wchr_name, wchr_value, Field::STORE_YES | Field::INDEX_UNTOKENIZED)
         );
       }
     }
@@ -282,20 +268,30 @@ extern "C" {
     IndexSearcher* s = reinterpret_cast<IndexSearcher*>(handler);
     using QueryParser = lucene::queryParser::QueryParser;
 
-    size_t len = strlen(query);
-    TCHAR wchr_query[len+1];
-    len = convert_multi_byte_to_wchar(query, wchr_query);
-    wchr_query[len] = '\0';
+    // size_t len = strlen(query);
+    // TCHAR wchr_query[len+1];
+    // len = convert_multi_byte_to_wchar(query, wchr_query);
+    // wchr_query[len] = '\0';
 
-    const TCHAR* inquery = wchr_query;
+    size_t len;
+    CVT_CHR_TO_WCHAR(query, qry)
+
+    const TCHAR* inquiry = wchr_qry;
     LanguageBasedAnalyzer an;
     an.setLanguage(_T("cjk"));
 
     QueryParser parser(_T("contents"), &an);
-    Query* q = parser.parse(inquery);
+    Query* q = parser.parse(inquiry);
     
     Hits* h = s->search(q);
-    cout << h->length() << endl;
+    len = h->length();
+
+    for (size_t i = 0; i < len; i++) {
+      Document& doc = h->doc(i);
+      const TCHAR* p = doc.get(_T("path"));
+      _tprintf(_T("score: %f, doc: %s\n"), h->score(i), p);
+      _tprintf(p);
+    }
 
     _CLLDELETE(h);
     _CLLDELETE(q);
