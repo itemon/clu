@@ -142,7 +142,7 @@ int main( int32_t argc, char** argv ){
 	char* index_dir = (char*)"/Users/huangwei/code/prj/serve/nginx_root/clu_idx";
 	cout << clu_str_num() << endl;
 
-    /**/CLuceneIndexHandler* h = clu_get_index_handler(index_dir);
+    /**/CLuceneIndexHandler* h = clu_get_index_handler(index_dir, NULL, true);
     CLuceneDocTag tags[1] = {
       {.name = (char*)"lib_mod", .value = (char*)"vue"},
     };

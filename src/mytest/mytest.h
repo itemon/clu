@@ -33,7 +33,7 @@ struct _CLuceneDocConfig {
 typedef _CLuceneDocConfig CLuceneDocConfig;
 
 // contructing index store handler
-CLuceneIndexHandler* clu_get_index_handler(const char* index_store_dir);
+CLuceneIndexHandler* clu_get_index_handler(const char* index_store_dir, enum CLuError* err, bool startover);
 
 /**
  * add files rooted at file to this index writer

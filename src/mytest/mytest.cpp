@@ -56,11 +56,11 @@ extern "C" {
     return _CL_VERSION;
   }
 
-  EXPORT CLuceneIndexHandler* clu_get_index_handler(const char* index_store_dir) {
+  EXPORT CLuceneIndexHandler* clu_get_index_handler(const char* index_store_dir, enum CLuError* err, bool startover) {
     IndexWriter* index_writer;
 
     // test if index is exists already
-    const bool has_index = IndexReader::indexExists(index_store_dir);
+    bool has_index = IndexReader::indexExists(index_store_dir);
     if (has_index && IndexReader::isLocked(index_store_dir)) {
       IndexReader::unlock(index_store_dir);
     }
@@ -68,7 +68,7 @@ extern "C" {
     LanguageBasedAnalyzer* an = _CLNEW LanguageBasedAnalyzer(_T("cjk"));
     // StandardAnalyzer* san = _CLNEW StandardAnalyzer();
 
-    index_writer = _CLNEW IndexWriter(index_store_dir, an, /*!has_index*/true);
+    index_writer = _CLNEW IndexWriter(index_store_dir, an, startover || !has_index);
     index_writer->setMaxFieldLength(0x7FFFFFFFL);
     index_writer->setUseCompoundFile(false);
 
@@ -257,7 +257,7 @@ extern "C" {
     size_t i = 0;
     while (i < results->len) {
       CLuceneSearchResult r = results->list[i];
-      // std::cout << "start to free here " << r.path << std::endl;
+      std::cout << "start to free here " << r.path << std::endl;
       if (r.name != NULL)
         free(r.name);
       if (r.path != NULL)
@@ -302,6 +302,7 @@ extern "C" {
       // item->path = convert_wchar_to_mb((TCHAR*)p);
       // items[i] = *item;
       items[i].path = convert_wchar_to_mb((TCHAR*)p);
+      items[i].name = (char*)malloc(1);
     }
 
     CLuceneSearchResults* rlts = (CLuceneSearchResults*)malloc(sizeof(CLuceneSearchResults));
