@@ -257,7 +257,7 @@ extern "C" {
     size_t i = 0;
     while (i < results->len) {
       CLuceneSearchResult r = results->list[i];
-      std::cout << "start to free here " << r.path << std::endl;
+      // std::cout << "start to free here " << r.path << std::endl;
       if (r.name != NULL)
         free(r.name);
       if (r.path != NULL)
