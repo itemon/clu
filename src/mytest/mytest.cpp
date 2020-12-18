@@ -28,27 +28,9 @@ using namespace lucene::util;
 using namespace lucene::search;
 
 EXPORT void my_test_whisper() {
-  int64_t d = DateTools::stringToTime(_T("2012"));
-  TCHAR* tmp = DateTools::getISOFormat(d);
-
 #ifdef MYTEST_INC_FINGER
-  cout << "finger here" << endl;
+  cout << "MYTTEST_INC_FINDER flag on" << endl;
 #endif
-
-  string dat;
-  int ret;
-  char cur[3];
-
-  wctomb(nullptr, 0);
-  while (*tmp != '\0') {
-    ret = wctomb(cur, *tmp);
-    if (ret <= 0)
-      break;
-    dat.insert(dat.size(), cur, ret);
-    tmp++;
-  }
-
-  cout << dat << endl;
 }
 
 extern "C" {
@@ -302,7 +284,7 @@ extern "C" {
       // item->path = convert_wchar_to_mb((TCHAR*)p);
       // items[i] = *item;
       items[i].path = convert_wchar_to_mb((TCHAR*)p);
-      items[i].name = (char*)malloc(1);
+      items[i].name = 0;
     }
 
     CLuceneSearchResults* rlts = (CLuceneSearchResults*)malloc(sizeof(CLuceneSearchResults));
