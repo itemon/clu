@@ -120,6 +120,8 @@ int main( int32_t argc, char** argv ){
 	#endif
 	#endif
 
+	my_test_whisper();
+
 	TCHAR sythesized_buf[9] = {
                 0x9ec4,
                 0x4f1f,
@@ -166,6 +168,7 @@ int main( int32_t argc, char** argv ){
 	CLuceneSearchResults* srlts = clu_search(sh, "contents:黄伟, AND contents:文字,", &err);//contents:黄伟, OR lib_mod:vue,
 
 	cout << "search results, size=" << srlts->len << "; results[0].name = " << srlts->list[0].path << endl;
+	// cout << "search results done" << endl;
 
 	clu_free_searcher(sh);
 	clu_free_search_results(srlts);

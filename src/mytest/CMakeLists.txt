@@ -21,10 +21,15 @@ file(GLOB_RECURSE OUR_HEADERS ${my_test_SOURCE_DIR}/*.h)
 add_library(my_test SHARED ${MY_TEST_ALL_FILES} ${OUR_HEADERS})
 set_property(TARGET my_test PROPERTY C_VISIBILITY_PRESET hidden)
 
-#set_property(TARGET my_test PROPERTY INSTALL_NAME_DIR @rpath/libmy_test.dylib)
 set_property(TARGET my_test PROPERTY SKIP_BUILD_RPATH 1)
 set_property(TARGET my_test PROPERTY BUILD_WITH_INSTALL_NAME_DIR 1)
 set_property(TARGET my_test PROPERTY INSTALL_NAME_DIR "@rpath")
+
+SET_TARGET_PROPERTIES(my_test PROPERTIES
+    VERSION ${CLUCENE_VERSION}
+    SOVERSION ${CLUCENE_SOVERSION}
+    COMPILE_DEFINITIONS_DEBUG _DEBUG
+)
 
 TARGET_LINK_LIBRARIES(my_test ${clucene_contrib_extra_libs})
 

@@ -275,6 +275,8 @@ extern "C" {
     const TCHAR* p;
     // CLuceneSearchResult* item;
     CLuceneSearchResult *items = (CLuceneSearchResult*)malloc(sizeof(CLuceneSearchResult) * len);
+    CLuceneSearchResults* rlts = (CLuceneSearchResults*)malloc(sizeof(CLuceneSearchResults));
+    
     for (size_t i = 0; i < len; i++) {
       Document& doc = h->doc(i);
       p = doc.get(_T("path"));
@@ -287,7 +289,6 @@ extern "C" {
       items[i].name = 0;
     }
 
-    CLuceneSearchResults* rlts = (CLuceneSearchResults*)malloc(sizeof(CLuceneSearchResults));
     rlts->len = len;
     rlts->list = items;
 
