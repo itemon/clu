@@ -273,10 +273,13 @@ extern "C" {
     len = h->length();
 
     const TCHAR* p;
-    // CLuceneSearchResult* item;
+
+    // allocate memory for result stucture
+    // we'll try to reuse memory for frequently search request
+    // scene
     CLuceneSearchResult *items = (CLuceneSearchResult*)malloc(sizeof(CLuceneSearchResult) * len);
     CLuceneSearchResults* rlts = (CLuceneSearchResults*)malloc(sizeof(CLuceneSearchResults));
-    
+
     for (size_t i = 0; i < len; i++) {
       Document& doc = h->doc(i);
       p = doc.get(_T("path"));
