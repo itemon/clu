@@ -250,7 +250,7 @@ extern "C" {
     free(results);
   }
 
-  EXPORT CLuceneSearchResults* clu_search(CLuceneSearchHandler* handler, const char* query, enum CLuError *err) {
+  EXPORT CLuceneSearchResults* clu_search(CLuceneSearchHandler* handler, CLuceneSearchResults* rlts, const char* query, enum CLuError *err) {
     IndexSearcher* s = reinterpret_cast<IndexSearcher*>(handler);
     using QueryParser = lucene::queryParser::QueryParser;
 
@@ -277,8 +277,21 @@ extern "C" {
     // allocate memory for result stucture
     // we'll try to reuse memory for frequently search request
     // scene
-    CLuceneSearchResult *items = (CLuceneSearchResult*)malloc(sizeof(CLuceneSearchResult) * len);
-    CLuceneSearchResults* rlts = (CLuceneSearchResults*)malloc(sizeof(CLuceneSearchResults));
+    if (rlts == NULL) {
+      rlts = (CLuceneSearchResults*)malloc(sizeof(CLuceneSearchResults));
+      rlts->list = NULL;
+    }
+
+    CLuceneSearchResult *items = rlts->list;
+    if (!items) {
+      items = (CLuceneSearchResult*)malloc(sizeof(CLuceneSearchResult) * len);
+    } else {
+      // std::cout << "debug brk" << rlts->list << std::endl;
+      if (len > rlts->len) {
+        // reallocate memory
+        items = (CLuceneSearchResult*)realloc(rlts->list, len);
+      }
+    }
 
     for (size_t i = 0; i < len; i++) {
       Document& doc = h->doc(i);
