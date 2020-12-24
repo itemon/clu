@@ -168,7 +168,7 @@ int main( int32_t argc, char** argv ){
 	cout << "before searching..." << endl;
 	CLuceneSearchResults* srlts = clu_search(sh, NULL, "contents:黄伟, AND contents:文字,", &err);//contents:黄伟, OR lib_mod:vue,
 
-	cout << "...search results, size=" << srlts->len << "; results[0].name = " << srlts->list[0].path << endl;
+	cout << "search results, size=" << srlts->len << "; results[0].name = " << srlts->list[0].path << endl;
 	// cout << "search results done" << endl;
 
 	// perform another search

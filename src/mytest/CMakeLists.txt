@@ -21,9 +21,17 @@ file(GLOB_RECURSE OUR_HEADERS ${my_test_SOURCE_DIR}/*.h)
 add_library(my_test SHARED ${MY_TEST_ALL_FILES} ${OUR_HEADERS})
 set_property(TARGET my_test PROPERTY C_VISIBILITY_PRESET hidden)
 
-set_property(TARGET my_test PROPERTY SKIP_BUILD_RPATH 1)
-set_property(TARGET my_test PROPERTY BUILD_WITH_INSTALL_NAME_DIR 1)
-set_property(TARGET my_test PROPERTY INSTALL_NAME_DIR "@rpath")
+#set_property(TARGET my_test PROPERTY SKIP_BUILD_RPATH 1)
+#set_property(TARGET my_test PROPERTY BUILD_WITH_INSTALL_NAME_DIR 1)
+#set_property(TARGET my_test PROPERTY INSTALL_NAME_DIR "@rpath")
+
+IF (ENABLE_BUILD_FOR_XCODE)
+  SET_TARGET_PROPERTIES(my_test PROPERTIES 
+    SKIP_BUILD_RPATH 1 
+    BUILD_WITH_INSTALL_NAME_DIR 1 
+    INSTALL_NAME_DIR "@rpath"
+  )
+ENDIF (ENABLE_BUILD_FOR_XCODE)
 
 SET_TARGET_PROPERTIES(my_test PROPERTIES
     VERSION ${CLUCENE_VERSION}
@@ -34,6 +42,6 @@ SET_TARGET_PROPERTIES(my_test PROPERTIES
 TARGET_LINK_LIBRARIES(my_test ${clucene_contrib_extra_libs})
 
 add_custom_target(my_test_print echo "hello world")
-message("build for xcode ${ENABLE_BUILD_FOR_XCODE}")
+#message("build for xcode ${ENABLE_BUILD_FOR_XCODE}")
 
 #add_custom_command(TARGET my_test POST_BUILD COMMAND BUD_DIR=${CMAKE_CURRENT_BINARY_DIR} sh ${CMAKE_CURRENT_SOURCE_DIR}/bud.sh)

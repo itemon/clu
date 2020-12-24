@@ -250,6 +250,14 @@ extern "C" {
     free(results);
   }
 
+  EXPORT CLuceneSearchResults* clu_create_search_results(size_t list_size, enum CLuError *err) {
+    CLuceneSearchResults* rlts = (CLuceneSearchResults*)malloc(sizeof(CLuceneSearchResults));
+    rlts->len = list_size;
+    CLuceneSearchResult* list = (CLuceneSearchResult*)malloc(sizeof(CLuceneSearchResult) * list_size);
+    rlts->list = list;
+    return rlts;
+  }
+
   EXPORT CLuceneSearchResults* clu_search(CLuceneSearchHandler* handler, CLuceneSearchResults* rlts, const char* query, enum CLuError *err) {
     IndexSearcher* s = reinterpret_cast<IndexSearcher*>(handler);
     using QueryParser = lucene::queryParser::QueryParser;

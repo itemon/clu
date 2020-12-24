@@ -67,6 +67,11 @@ typedef struct _CLuceneSearchResults {
 
 void clu_list_all_terms(const char* index_store_dir);
 
+/**
+ * create search results 
+ */
+CLuceneSearchResults* clu_create_search_results(size_t list_size, enum CLuError *err);
+
 CLuceneSearchResults* clu_search(CLuceneSearchHandler* search_handler, CLuceneSearchResults* rlts, const char* query, enum CLuError *err);
 
 void clu_free_search_results(CLuceneSearchResults* results);
