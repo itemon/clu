@@ -106,6 +106,14 @@ add_library(clucene-contribs-lib SHARED
 )
 TARGET_LINK_LIBRARIES(clucene-contribs-lib ${clucene_contrib_extra_libs})
 
+IF (ENABLE_BUILD_FOR_XCODE)
+  SET_TARGET_PROPERTIES(clucene-contribs-lib PROPERTIES 
+    SKIP_BUILD_RPATH 1 
+    BUILD_WITH_INSTALL_NAME_DIR 1 
+    INSTALL_NAME_DIR "@rpath"
+  )
+ENDIF (ENABLE_BUILD_FOR_XCODE)
+
 #set properties on the libraries
 SET_TARGET_PROPERTIES(clucene-contribs-lib PROPERTIES
     VERSION ${CLUCENE_VERSION}

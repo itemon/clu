@@ -190,6 +190,14 @@ add_library(clucene-core SHARED
 	${clucene_core_Files} ${clucene_shared_Files} ${HEADERS}
 )
 
+IF (ENABLE_BUILD_FOR_XCODE)
+  SET_TARGET_PROPERTIES(clucene-core PROPERTIES 
+    SKIP_BUILD_RPATH 1 
+    BUILD_WITH_INSTALL_NAME_DIR 1 
+    INSTALL_NAME_DIR "@rpath"
+  )
+ENDIF (ENABLE_BUILD_FOR_XCODE)
+
 #set properties on the libraries
 SET_TARGET_PROPERTIES(clucene-core PROPERTIES
     VERSION ${CLUCENE_VERSION}
