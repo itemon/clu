@@ -105,36 +105,31 @@ extern "C" {
   // writing index to doc
   void _writing_index(Document* doc, const char* cur, CLuceneDocConfig* config) {
     size_t len;
-    // len = strlen(cur);
-    // TCHAR wchr[len + 1];
-    // len = convert_multi_byte_to_wchar(cur, wchr);
-    // wchr[len] = '\0';
 
-    CVT_CHR_TO_WCHAR(cur, content)
-
-    doc->add( 
-      *_CLNEW Field(_T("contents"), wchr_content, Field::STORE_YES | Field::INDEX_TOKENIZED)
-    );
+    if (cur) {
+      CVT_CHR_TO_WCHAR(cur, content)
+      doc->add( 
+        *_CLNEW Field(_T("contents"), wchr_content, Field::STORE_YES | Field::INDEX_TOKENIZED)
+      );
+    }
 
     if (config != NULL && config->tag_size > 0) {
       char* entity;
+      int flags;
       for (int i = 0; i < config->tag_size; ++i) {
         entity = config->tags[i].name;
         CVT_CHR_TO_WCHAR(entity, name)
-        // len = strlen(entity); 
-        // TCHAR entity_wchr_name[len + 1]; 
-        // len = convert_multi_byte_to_wchar(entity, entity_wchr_name); 
-        // entity_wchr_name[len] = '\0';
 
         entity = config->tags[i].value;
         CVT_CHR_TO_WCHAR(entity, value)
-        // len = strlen(entity); 
-        // TCHAR entity_wchr_value[len + 1]; 
-        // len = convert_multi_byte_to_wchar(entity, entity_wchr_value); 
-        // entity_wchr_value[len] = '\0';
+
+        flags = config->tags[i].flags;
+        if (flags == 0) {
+          flags = Field::STORE_YES | Field::INDEX_UNTOKENIZED;
+        }
 
         doc->add(
-          *_CLNEW Field(wchr_name, wchr_value, Field::STORE_YES | Field::INDEX_UNTOKENIZED)
+          *_CLNEW Field(wchr_name, wchr_value, flags)
         );
       }
     }
@@ -169,6 +164,15 @@ extern "C" {
       if (cur != 0)
         free(cur);
       ++leading;
+    }
+  }
+
+  EXPORT void add_custom_doc_to_index_handler(CLuceneIndexHandler* handler, CLuceneDocConfig* config) {
+    CAST_HANDLER(handler);
+    if (config && config->tag_size > 0) {
+      Document doc;
+      _writing_index(&doc, NULL, config);
+      index_writer->addDocument(&doc);
     }
   }
 

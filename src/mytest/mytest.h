@@ -23,6 +23,7 @@ typedef struct _CLuceneIndexHandler CLuceneIndexHandler;
 
 struct _CLuceneDocTag {
   char *name, *value;
+  int flags;
 };
 typedef _CLuceneDocTag CLuceneDocTag;
 
@@ -39,6 +40,8 @@ CLuceneIndexHandler* clu_get_index_handler(const char* index_store_dir, enum CLu
  * add files rooted at file to this index writer
  */
 void clu_add_doc_to_index_handler(CLuceneIndexHandler* handler, const char* dir, CLuceneDocConfig* config);
+
+void clu_add_custom_doc_to_index_handler(CLuceneIndexHandler* handler, CLuceneDocConfig* config);
 
 /**
  * optimizie the index

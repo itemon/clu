@@ -146,7 +146,7 @@ int main( int32_t argc, char** argv ){
 
     /**/CLuceneIndexHandler* h = clu_get_index_handler(index_dir, NULL, true);
     CLuceneDocTag tags[1] = {
-      {.name = (char*)"lib_mod", .value = (char*)"vue"},
+      {.name = (char*)"lib_mod", .value = (char*)"vue", .flags = 0},
     };
     CLuceneDocConfig doc_config = {
       .tags = tags,
@@ -166,7 +166,7 @@ int main( int32_t argc, char** argv ){
 	CLuceneSearchHandler* sh = clu_get_searcher(index_dir, NULL);
 	enum CLuError err;
 	cout << "before searching..." << endl;
-	CLuceneSearchResults* srlts = clu_search(sh, NULL, "contents:黄伟, AND contents:文字,", &err);//contents:黄伟, OR lib_mod:vue,
+	CLuceneSearchResults* srlts = clu_search(sh, NULL, "contents:黄伟, AND contents:文字, AND lib_mod:vue", &err);//contents:黄伟, OR lib_mod:vue,
 
 	cout << "search results, size=" << srlts->len << "; results[0].name = " << srlts->list[0].path << endl;
 	// cout << "search results done" << endl;
