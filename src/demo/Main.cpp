@@ -27,6 +27,7 @@
 #include <sstream>
 
 #include "mytest.h"
+#include "jsmn.h"
 #include "tool.h"
 
 using namespace std;
@@ -111,6 +112,18 @@ void read_local_io_config(IOFileConfig* config, char* initDir) {
 	std::cout << config->inputFile << ":" << config->outputFile << std::endl;
 }
 
+static const char *JSON_STRING =
+    "{\"user\": \"johndoe\", \"admin\": false, \"uid\": 1000,\n  "
+    "\"groups\": [\"users\", \"wheel\", \"audio\", \"video\"]}";
+
+static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
+  if (tok->type == JSMN_STRING && (int)strlen(s) == tok->end - tok->start &&
+      strncmp(json + tok->start, s, tok->end - tok->start) == 0) {
+    return 0;
+  }
+  return -1;
+}
+
 int main( int32_t argc, char** argv ){
 	//Dumper Debug
 	#ifdef _MSC_VER
@@ -121,6 +134,23 @@ int main( int32_t argc, char** argv ){
 	#endif
 
 	my_test_whisper();
+
+	jsmn_parser parser;
+	jsmn_init(&parser);
+
+	int r = jsmn_parse(&parser, JSON_STRING, strlen(JSON_STRING), NULL, 0);
+	cout << "Need " << r << " tokens" << endl;
+
+    jsmn_init(&parser);
+	jsmntok_t t[r];
+	r = jsmn_parse(&parser, JSON_STRING, strlen(JSON_STRING), t, r);
+
+	// jsmntok_t tok = t[1];
+	int tok_size = t[1].end - t[1].start;
+	char tok_text[tok_size + 1];
+	strncpy(tok_text, JSON_STRING + t[1].start, tok_size);
+	tok_text[tok_size] = '\0';
+	cout << "first token is " << tok_text << " size " << tok_size << endl;
 
 	TCHAR sythesized_buf[9] = {
                 0x9ec4,
@@ -166,7 +196,7 @@ int main( int32_t argc, char** argv ){
 	CLuceneSearchHandler* sh = clu_get_searcher(index_dir, NULL);
 	enum CLuError err;
 	cout << "before searching..." << endl;
-	CLuceneSearchResults* srlts = clu_search(sh, NULL, "contents:黄伟, AND contents:文字, AND lib_mod:vue", &err);//contents:黄伟, OR lib_mod:vue,
+	CLuceneSearchResults* srlts = clu_search(sh, NULL, "lib_mod:vue", &err);//contents:黄伟, OR lib_mod:vue,
 
 	cout << "search results, size=" << srlts->len << "; results[0].name = " << srlts->list[0].path << endl;
 	// cout << "search results done" << endl;

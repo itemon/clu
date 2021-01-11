@@ -16,6 +16,7 @@
 
 #include "mytest.h"
 #include "tool.h"
+#include "jsmn.h"
 
 #define EXPORT __attribute__((visibility("default")))
 
@@ -102,17 +103,93 @@ extern "C" {
   len = convert_multi_byte_to_wchar(entity, wchr_##VAR_SUFFIX);\
   wchr_##VAR_SUFFIX[len] = '\0';
 
+  static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
+    if (tok->type == JSMN_STRING && (int)strlen(s) == tok->end - tok->start &&
+        strncmp(json + tok->start, s, tok->end - tok->start) == 0) {
+      return 0;
+    }
+    return -1;
+  }
+
+  // build char* value of travel_token
+  // the name of the char* value is named by name param
+  // using pattern name_val
+  #define BUILD_TOKEN_VALUE(name, str, travel_token) \
+    char name##_val[travel_token.end - travel_token.start + 1]; \
+    strncpy(name##_val, str + travel_token.start, travel_token.end - travel_token.start); \
+    name##_val[travel_token.end - travel_token.start] = '\0';
+
   // writing index to doc
-  void _writing_index(Document* doc, const char* cur, CLuceneDocConfig* config) {
+  void _writing_index(Document* doc, const char* cur, CLuceneDocConfig* config, bool is_json) {
     size_t len;
 
     if (cur) {
-      CVT_CHR_TO_WCHAR(cur, content)
-      doc->add( 
-        *_CLNEW Field(_T("contents"), wchr_content, Field::STORE_YES | Field::INDEX_TOKENIZED)
-      );
+      if (is_json) {
+        jsmn_parser parser;
+        jsmn_init(&parser);
+
+        size_t cur_len = strlen(cur);
+        int token_needs = jsmn_parse(&parser, cur, cur_len, NULL, 0);
+        if (token_needs <= 0) {
+          goto proceed_final_prop;
+          return;
+        }
+        jsmntok_t doc_tokens[token_needs];
+        jsmn_init(&parser);
+
+        token_needs = jsmn_parse(&parser, cur, cur_len, doc_tokens, token_needs);
+        jsmntok_t travel_token = doc_tokens[0];
+        switch (travel_token.type) {
+          case JSMN_ARRAY: {
+            break;
+          }
+          case JSMN_OBJECT: {
+            // top level object was considered as single doc
+            int doc_type, doc_sub_type;
+            for (size_t i = 1; i < token_needs; ++i) {
+              if (jsoneq(cur, &doc_tokens[i], "attr_doc") == 0) {
+                travel_token = doc_tokens[i + 1];
+                if (travel_token.type == JSMN_OBJECT && travel_token.size > 0) {
+                  BUILD_TOKEN_VALUE(doc, cur, travel_token)
+                  for (size_t j = 0; j < travel_token.size; ++j) {
+                    if (jsoneq(cur, &doc_tokens[i + 1 + j], "type") == 0) {
+                      // doc type is
+                      BUILD_TOKEN_VALUE(typ, cur, doc_tokens[i + 1 + j + 1])
+                      doc_type = atoi(typ_val);
+
+                      len = strlen(typ_val);
+                      TCHAR wide_doc_type[len + 1];
+                      STRCPY_AtoT(wide_doc_type, typ_val, len);
+                      wide_doc_type[len] = '\0';
+
+                      doc->add(*_CLNEW Field(_T("doc_type"), 
+                        wide_doc_type, 
+                        Field::STORE_YES | Field::INDEX_UNTOKENIZED));
+                    } else if (jsoneq(cur, &doc_tokens[i + 1 + j], "sub_type") == 0) {
+                      BUILD_TOKEN_VALUE(sub_typ, cur, doc_tokens[i + 1 + j + 1])
+                      doc_sub_type = atoi(sub_typ_val);
+                    }
+                  }
+                }
+                ++i;
+                break;
+              }
+            }
+            break;
+          }
+          default: {
+            break;
+          }
+        }
+      } else {
+        CVT_CHR_TO_WCHAR(cur, content)
+        doc->add( 
+          *_CLNEW Field(_T("contents"), wchr_content, Field::STORE_YES | Field::INDEX_TOKENIZED)
+        );
+      }
     }
 
+  proceed_final_prop:
     if (config != NULL && config->tag_size > 0) {
       char* entity;
       int flags;
@@ -156,9 +233,10 @@ extern "C" {
       TCHAR wchr_path[len+1];
       len = convert_multi_byte_to_wchar(path, wchr_path);
       wchr_path[len] = '\0';
-      doc.add( *_CLNEW Field(_T("path"), wchr_path, Field::STORE_YES | Field::INDEX_UNTOKENIZED ) );
+      doc.add(*_CLNEW Field(_T("path"), wchr_path, Field::STORE_YES | Field::INDEX_UNTOKENIZED));
 
-      _writing_index(&doc, cur, config);
+      bool is_index_file = str_end_with(path, ".index.json");
+      _writing_index(&doc, cur, config, is_index_file);
       index_writer->addDocument(&doc);
 
       if (cur != 0)
@@ -171,7 +249,7 @@ extern "C" {
     CAST_HANDLER(handler);
     if (config && config->tag_size > 0) {
       Document doc;
-      _writing_index(&doc, NULL, config);
+      _writing_index(&doc, NULL, config, false);
       index_writer->addDocument(&doc);
     }
   }
@@ -261,6 +339,24 @@ extern "C" {
     rlts->list = list;
     return rlts;
   }
+
+  /**
+   * on searching for index file, we separate it by masks 
+   * 1 global function
+   * 11 global variable
+   * 12 global macro varaible
+   * 13 global macro function
+   * 
+   * 2 class
+   * 21 class method
+   * 22 class variable
+   * 23 class stitic method
+   * 24 class static variable
+   * 
+   * on distinguish doc type
+   * 0 api
+   * 1 tutorial
+   */
 
   EXPORT CLuceneSearchResults* clu_search(CLuceneSearchHandler* handler, CLuceneSearchResults* rlts, const char* query, enum CLuError *err) {
     IndexSearcher* s = reinterpret_cast<IndexSearcher*>(handler);

@@ -49,3 +49,26 @@ char* convert_wchar_to_mb(TCHAR* wchr) {
 
   return result;
 }
+
+bool str_end_with(const char* str, const char* sub) {
+  if (!str || !sub) {
+    return false;
+  }
+
+  size_t big_len = strlen(str), small_len = strlen(sub);
+  if (small_len > big_len) {
+    return false;
+  }
+
+  size_t c = small_len - 1;
+  --big_len;
+  while (c > 0) {
+    if (sub[c] != str[big_len]) {
+      return false;
+    }
+    --c;
+    --big_len;
+  }
+
+  return true;
+}
