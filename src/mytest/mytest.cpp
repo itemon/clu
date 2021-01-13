@@ -145,7 +145,7 @@ extern "C" {
           }
           case JSMN_OBJECT: {
             // top level object was considered as single doc
-            int doc_type, doc_sub_type;
+            // int doc_type, doc_sub_type;
             for (size_t i = 1; i < token_needs; ++i) {
               if (jsoneq(cur, &doc_tokens[i], "attr_doc") == 0) {
                 travel_token = doc_tokens[i + 1];
@@ -155,19 +155,38 @@ extern "C" {
                     if (jsoneq(cur, &doc_tokens[i + 1 + j], "type") == 0) {
                       // doc type is
                       BUILD_TOKEN_VALUE(typ, cur, doc_tokens[i + 1 + j + 1])
-                      doc_type = atoi(typ_val);
+                      // doc_type = atoi(typ_val);
 
-                      len = strlen(typ_val);
+                      /*len = strlen(typ_val);
                       TCHAR wide_doc_type[len + 1];
                       STRCPY_AtoT(wide_doc_type, typ_val, len);
-                      wide_doc_type[len] = '\0';
+                      wide_doc_type[len] = '\0';*/
+
+                      CVT_CHR_TO_WCHAR(typ_val, doc_type);
 
                       doc->add(*_CLNEW Field(_T("doc_type"), 
-                        wide_doc_type, 
+                        wchr_doc_type, 
                         Field::STORE_YES | Field::INDEX_UNTOKENIZED));
+                      
                     } else if (jsoneq(cur, &doc_tokens[i + 1 + j], "sub_type") == 0) {
                       BUILD_TOKEN_VALUE(sub_typ, cur, doc_tokens[i + 1 + j + 1])
-                      doc_sub_type = atoi(sub_typ_val);
+                      // doc_sub_type = atoi(sub_typ_val);
+
+                      CVT_CHR_TO_WCHAR(sub_typ_val, doc_sub_type)
+                      doc->add(*_CLNEW Field(_T("doc_sub_type"), 
+                        wchr_doc_sub_type, 
+                        Field::STORE_YES | Field::INDEX_UNTOKENIZED));
+                    } else if (jsoneq(cur, &doc_tokens[i + 1 + j], "parent") == 0) {
+                      // has parent class
+                      BUILD_TOKEN_VALUE(parent, cur, doc_tokens[i + 1 + j + 1])
+                      CVT_CHR_TO_WCHAR(parent_val, parent)
+                      
+                      doc->add(* _CLNEW Field(_T("doc_parent"), wchr_parent, Field::STORE_YES | Field::INDEX_UNTOKENIZED));
+                    } else if (jsoneq(cur, &doc_tokens[i + 1 + j], "namespace") == 0) {
+                      BUILD_TOKEN_VALUE(namespace_type, cur, doc_tokens[i + 1 + j])
+                      CVT_CHR_TO_WCHAR(namespace_type_val, namespace_type)
+
+                      doc->add(* _CLNEW Field(_T("doc_namespace"), wchr_namespace_type, Field::STORE_YES | Field::INDEX_UNTOKENIZED));
                     }
                   }
                 }
