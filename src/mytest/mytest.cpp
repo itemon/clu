@@ -157,11 +157,6 @@ extern "C" {
                       BUILD_TOKEN_VALUE(typ, cur, doc_tokens[i + 1 + j + 1])
                       // doc_type = atoi(typ_val);
 
-                      /*len = strlen(typ_val);
-                      TCHAR wide_doc_type[len + 1];
-                      STRCPY_AtoT(wide_doc_type, typ_val, len);
-                      wide_doc_type[len] = '\0';*/
-
                       CVT_CHR_TO_WCHAR(typ_val, doc_type);
 
                       doc->add(*_CLNEW Field(_T("doc_type"), 
@@ -192,6 +187,19 @@ extern "C" {
                 }
                 ++i;
                 break;
+              } else if (jsoneq(cur, &doc_tokens[i], "name") == 0) {
+                travel_token = doc_tokens[i + 1];
+                BUILD_TOKEN_VALUE(name, cur, travel_token)
+                // cout << "found name " << name_val << endl;
+                CVT_CHR_TO_WCHAR(name_val, name_type)
+                doc->add(* _CLNEW Field(_T("name"), wchr_name_type, Field::STORE_YES | Field::INDEX_TOKENIZED));
+                ++i;
+              } else if (jsoneq(cur,&doc_tokens[i], "description") == 0) {
+                travel_token = doc_tokens[i + 1];
+                BUILD_TOKEN_VALUE(desc, cur, travel_token)
+                CVT_CHR_TO_WCHAR(desc_val, desc)
+
+                doc->add(* _CLNEW Field(_T("desc"), wchr_desc, Field::STORE_YES | Field::INDEX_TOKENIZED));
               }
             }
             break;

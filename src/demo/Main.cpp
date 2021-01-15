@@ -202,7 +202,7 @@ int main( int32_t argc, char** argv ){
 	// cout << "search results done" << endl;
 
 	// perform another search
-	srlts = clu_search(sh, srlts, "contents:satisfies", &err);
+	srlts = clu_search(sh, srlts, "name:OpenGL", &err);
 	cout << "...search results, size=" << srlts->len << endl;
 
 	clu_free_searcher(sh);
