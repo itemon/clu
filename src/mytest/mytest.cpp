@@ -147,52 +147,53 @@ extern "C" {
             // top level object was considered as single doc
             // int doc_type, doc_sub_type;
             for (size_t i = 1; i < token_needs; ++i) {
+              
               if (jsoneq(cur, &doc_tokens[i], "attr_doc") == 0) {
                 travel_token = doc_tokens[i + 1];
                 if (travel_token.type == JSMN_OBJECT && travel_token.size > 0) {
-                  BUILD_TOKEN_VALUE(doc, cur, travel_token)
-                  for (size_t j = 0; j < travel_token.size; ++j) {
-                    if (jsoneq(cur, &doc_tokens[i + 1 + j], "type") == 0) {
+                  int doc_attr_size = travel_token.size;
+                  i += 2;
+                  while (doc_attr_size > 0 && i < token_needs) {
+                    if (jsoneq(cur, &doc_tokens[i], "type") == 0) {
                       // doc type is
-                      BUILD_TOKEN_VALUE(typ, cur, doc_tokens[i + 1 + j + 1])
-                      // doc_type = atoi(typ_val);
-
-                      CVT_CHR_TO_WCHAR(typ_val, doc_type);
+                      BUILD_TOKEN_VALUE(typ, cur, doc_tokens[i + 1])
+                      CVT_CHR_TO_WCHAR(typ_val, typ);
 
                       doc->add(*_CLNEW Field(_T("doc_type"), 
-                        wchr_doc_type, 
+                        wchr_typ, 
                         Field::STORE_YES | Field::INDEX_UNTOKENIZED));
-                      
-                    } else if (jsoneq(cur, &doc_tokens[i + 1 + j], "sub_type") == 0) {
-                      BUILD_TOKEN_VALUE(sub_typ, cur, doc_tokens[i + 1 + j + 1])
-                      // doc_sub_type = atoi(sub_typ_val);
+                      doc_attr_size--;
+                    } else if (jsoneq(cur, &doc_tokens[i], "sub_type") == 0) {
+                      BUILD_TOKEN_VALUE(sub_typ, cur, doc_tokens[i + 1])
 
-                      CVT_CHR_TO_WCHAR(sub_typ_val, doc_sub_type)
+                      CVT_CHR_TO_WCHAR(sub_typ_val, sub_typ)
                       doc->add(*_CLNEW Field(_T("doc_sub_type"), 
-                        wchr_doc_sub_type, 
+                        wchr_sub_typ, 
                         Field::STORE_YES | Field::INDEX_UNTOKENIZED));
-                    } else if (jsoneq(cur, &doc_tokens[i + 1 + j], "parent") == 0) {
+                      doc_attr_size--;
+                    } else if (jsoneq(cur, &doc_tokens[i], "parent") == 0) {
                       // has parent class
-                      BUILD_TOKEN_VALUE(parent, cur, doc_tokens[i + 1 + j + 1])
+                      BUILD_TOKEN_VALUE(parent, cur, doc_tokens[i])
                       CVT_CHR_TO_WCHAR(parent_val, parent)
                       
                       doc->add(* _CLNEW Field(_T("doc_parent"), wchr_parent, Field::STORE_YES | Field::INDEX_UNTOKENIZED));
-                    } else if (jsoneq(cur, &doc_tokens[i + 1 + j], "namespace") == 0) {
-                      BUILD_TOKEN_VALUE(namespace_type, cur, doc_tokens[i + 1 + j])
+                      doc_attr_size--;
+                    } else if (jsoneq(cur, &doc_tokens[i], "namespace") == 0) {
+                      BUILD_TOKEN_VALUE(namespace_type, cur, doc_tokens[i + 1])
                       CVT_CHR_TO_WCHAR(namespace_type_val, namespace_type)
 
                       doc->add(* _CLNEW Field(_T("doc_namespace"), wchr_namespace_type, Field::STORE_YES | Field::INDEX_UNTOKENIZED));
+                      doc_attr_size--;
                     }
+                    ++i;
                   }
                 }
-                ++i;
-                break;
               } else if (jsoneq(cur, &doc_tokens[i], "name") == 0) {
                 travel_token = doc_tokens[i + 1];
                 BUILD_TOKEN_VALUE(name, cur, travel_token)
                 // cout << "found name " << name_val << endl;
-                CVT_CHR_TO_WCHAR(name_val, name_type)
-                doc->add(* _CLNEW Field(_T("name"), wchr_name_type, Field::STORE_YES | Field::INDEX_TOKENIZED));
+                CVT_CHR_TO_WCHAR(name_val, name)
+                doc->add(* _CLNEW Field(_T("name"), wchr_name, Field::STORE_YES | Field::INDEX_TOKENIZED));
                 ++i;
               } else if (jsoneq(cur,&doc_tokens[i], "description") == 0) {
                 travel_token = doc_tokens[i + 1];
@@ -200,6 +201,30 @@ extern "C" {
                 CVT_CHR_TO_WCHAR(desc_val, desc)
 
                 doc->add(* _CLNEW Field(_T("desc"), wchr_desc, Field::STORE_YES | Field::INDEX_TOKENIZED));
+                ++i;
+              } else if (jsoneq(cur, &doc_tokens[i], "path") == 0) {
+                travel_token = doc_tokens[i + 1];
+                BUILD_TOKEN_VALUE(path, cur, travel_token)
+                CVT_CHR_TO_WCHAR(path_val, path)
+
+                doc->add(* _CLNEW Field(_T("path"), wchr_path, Field::STORE_YES | Field::INDEX_UNTOKENIZED));
+                ++i;
+              } else if (jsoneq(cur, &doc_tokens[i], "category") == 0) {
+                travel_token = doc_tokens[i + 1];
+                if (travel_token.type == JSMN_ARRAY && travel_token.size > 0) {
+                  for (size_t j = 0; j < travel_token.size; ++j) {
+                    /*jsmntok_t tok = doc_tokens[i + 1 + j + 1];
+                    char p[tok.end - tok.start + 1];
+                    strncpy(p, cur+tok.start, tok.end - tok.start);
+                    p[tok.end - tok.start] = '\0';*/
+
+                    BUILD_TOKEN_VALUE(cate, cur, doc_tokens[i + 1 + j + 1])
+                    CVT_CHR_TO_WCHAR(cate_val, cate)
+                    
+                    doc->add(* _CLNEW Field(_T("category"), wchr_cate, Field::STORE_YES | Field::INDEX_UNTOKENIZED));
+                  }
+                }
+                cout << travel_token.type << endl;
               }
             }
             break;
