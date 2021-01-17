@@ -35,6 +35,9 @@ EXPORT void my_test_whisper() {
 }
 
 extern "C" {
+  void json_array_token(const char* json, jsmntok_t* all_tok, jsmntok_t* tok, size_t* i);
+  void json_object_token(const char* json, jsmntok_t* all_tok, jsmntok_t* tok, size_t* i);
+
   EXPORT const char* clu_str_num() {
     return _CL_VERSION;
   }
@@ -119,6 +122,85 @@ extern "C" {
     strncpy(name##_val, str + travel_token.start, travel_token.end - travel_token.start); \
     name##_val[travel_token.end - travel_token.start] = '\0';
 
+  #define DUMP_TOK_VAL() \
+
+  /**
+   * param {i} specify the index of current tok
+   * param {tok} the current token 
+   */
+  void json_array_token(const char* json, jsmntok_t* all_toks, jsmntok_t* tok, size_t* i) {
+    if (tok->type == JSMN_ARRAY && tok->size > 0) {
+      // string array value share common key
+      // the key token is back by 2 steps
+      size_t len;
+
+      BUILD_TOKEN_VALUE(key, json, all_toks[*i - 1])
+      CVT_CHR_TO_WCHAR(key_val, key)
+
+      for (size_t j = 0; j < tok->size; ++j) {
+        *i += 1;
+        jsmntok_t tok = all_toks[*i];
+        switch (tok.type) {
+        case JSMN_OBJECT: {
+          if (tok.size > 0) {
+            json_object_token(json, all_toks, &tok, i);
+          }
+          break;
+        }
+          
+        case JSMN_STRING: {
+          BUILD_TOKEN_VALUE(val, json, tok)
+          CVT_CHR_TO_WCHAR(val_val, val)
+
+          wcout << "[json array token]key: " << wchr_key << ":" << wchr_val << endl;
+          break;
+        }
+
+        default: {
+          break;
+        }
+          
+        }
+      }
+    }
+  }
+
+  void json_object_token(const char* json, jsmntok_t* all_toks, jsmntok_t* tok, size_t* i) {
+    if (tok->type == JSMN_OBJECT && tok->size > 0) {
+      size_t ack_remaining = tok->size;
+      size_t len;
+
+      while (ack_remaining > 0) {
+        *i += 1;
+        BUILD_TOKEN_VALUE(key, json, all_toks[*i])
+        CVT_CHR_TO_WCHAR(key_val, key)
+        *i += 1;
+
+        switch (all_toks[*i].type)
+        {
+        case JSMN_ARRAY: {
+          json_array_token(json, all_toks, &all_toks[*i], i);
+          break;
+        }
+
+        case JSMN_OBJECT: {
+          json_object_token(json, all_toks, &all_toks[*i], i);
+          break;
+        }
+        
+        default: {
+          BUILD_TOKEN_VALUE(val, json, all_toks[*i])
+          CVT_CHR_TO_WCHAR(val_val, val)
+          wcout << "[json_object_token] key:" << wchr_key << ":" << wchr_val << endl;
+          break;
+        }
+        }
+        
+        ack_remaining--;
+      }
+    }
+  }
+
   // writing index to doc
   void _writing_index(Document* doc, const char* cur, CLuceneDocConfig* config, bool is_json) {
     size_t len;
@@ -139,6 +221,7 @@ extern "C" {
 
         token_needs = jsmn_parse(&parser, cur, cur_len, doc_tokens, token_needs);
         jsmntok_t travel_token = doc_tokens[0];
+        size_t i = 0;
         switch (travel_token.type) {
           case JSMN_ARRAY: {
             break;
@@ -146,6 +229,7 @@ extern "C" {
           case JSMN_OBJECT: {
             // top level object was considered as single doc
             // int doc_type, doc_sub_type;
+            /*
             for (size_t i = 1; i < token_needs; ++i) {
               
               if (jsoneq(cur, &doc_tokens[i], "attr_doc") == 0) {
@@ -191,7 +275,6 @@ extern "C" {
               } else if (jsoneq(cur, &doc_tokens[i], "name") == 0) {
                 travel_token = doc_tokens[i + 1];
                 BUILD_TOKEN_VALUE(name, cur, travel_token)
-                // cout << "found name " << name_val << endl;
                 CVT_CHR_TO_WCHAR(name_val, name)
                 doc->add(* _CLNEW Field(_T("name"), wchr_name, Field::STORE_YES | Field::INDEX_TOKENIZED));
                 ++i;
@@ -213,23 +296,28 @@ extern "C" {
                 travel_token = doc_tokens[i + 1];
                 if (travel_token.type == JSMN_ARRAY && travel_token.size > 0) {
                   for (size_t j = 0; j < travel_token.size; ++j) {
-                    /*jsmntok_t tok = doc_tokens[i + 1 + j + 1];
-                    char p[tok.end - tok.start + 1];
-                    strncpy(p, cur+tok.start, tok.end - tok.start);
-                    p[tok.end - tok.start] = '\0';*/
-
                     BUILD_TOKEN_VALUE(cate, cur, doc_tokens[i + 1 + j + 1])
                     CVT_CHR_TO_WCHAR(cate_val, cate)
                     
                     doc->add(* _CLNEW Field(_T("category"), wchr_cate, Field::STORE_YES | Field::INDEX_UNTOKENIZED));
                   }
                 }
-                cout << travel_token.type << endl;
+                i += travel_token.size + 1;
+              } else if (jsoneq(cur, &doc_tokens[i], "text") == 0) {
+                travel_token = doc_tokens[i + 1];
+                if (travel_token.type == JSMN_ARRAY && travel_token.size > 0) {
+                  json_array_token(cur, doc_tokens, &travel_token, &(++i));
+                }
               }
             }
+            */
+            
+            json_object_token(cur, doc_tokens, &travel_token, &i);
             break;
           }
           default: {
+            // primitive type is not supposed to be legal here
+            // drop that data
             break;
           }
         }
