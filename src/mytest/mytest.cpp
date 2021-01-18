@@ -2,9 +2,6 @@
 #include <cstdlib>
 #include <cstring>
 
-#include <unordered_map>
-#include <utility>
-
 #include "CLucene/StdHeader.h"
 #include "CLucene/_clucene-config.h"
 
