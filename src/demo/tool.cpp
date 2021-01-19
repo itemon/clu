@@ -25,7 +25,27 @@ size_t convert_multi_byte_to_wchar(const char* src, TCHAR* dest) {
     return c;
 }
 
-char* convert_wchar_to_mb(TCHAR* wchr) {
+size_t count_mb_of_wchr(TCHAR* wchr) {
+  if (!wchr)
+    return 0;
+
+  int ret;
+  size_t c = 0;
+  char cur[3];
+
+  wctomb(nullptr, 0);
+  while (*wchr != '\0') {
+    ret = wctomb(cur, *wchr);
+    if (ret <= 0)
+      break;
+    c += ret;
+    wchr++;
+  }
+
+  return c;
+}
+
+char* convert_wchar_to_mb(TCHAR* wchr, char* result) {
   std::string dat;
   int ret;
   char cur[3];
@@ -43,9 +63,15 @@ char* convert_wchar_to_mb(TCHAR* wchr) {
     wchr++;
   }
 
-  char* result = (char*)malloc(dat.size() + 1);
-  strncpy(result, dat.c_str(), dat.size());
-  result[dat.size()] = '\0';
+  size_t copy_len;
+  if (!result) {
+    copy_len = dat.size();
+    result = (char*)malloc(copy_len + 1);
+  } else {
+    copy_len = strlen(result);
+  }
+  strncpy(result, dat.c_str(), copy_len);
+  result[copy_len] = '\0';
 
   return result;
 }

@@ -416,11 +416,12 @@ extern "C" {
     free(results);
   }
 
-  EXPORT CLuceneSearchResults* clu_create_search_results(size_t list_size, enum CLuError *err) {
+  EXPORT CLuceneSearchResults* clu_create_search_results(size_t list_size, size_t max_size, enum CLuError *err) {
     CLuceneSearchResults* rlts = (CLuceneSearchResults*)malloc(sizeof(CLuceneSearchResults));
     rlts->len = list_size;
     CLuceneSearchResult* list = (CLuceneSearchResult*)malloc(sizeof(CLuceneSearchResult) * list_size);
     rlts->list = list;
+    rlts->max_len = max_size;
     return rlts;
   }
 
@@ -446,11 +447,6 @@ extern "C" {
     IndexSearcher* s = reinterpret_cast<IndexSearcher*>(handler);
     using QueryParser = lucene::queryParser::QueryParser;
 
-    // size_t len = strlen(query);
-    // TCHAR wchr_query[len+1];
-    // len = convert_multi_byte_to_wchar(query, wchr_query);
-    // wchr_query[len] = '\0';
-
     size_t len;
     CVT_CHR_TO_WCHAR(query, qry)
 
@@ -474,6 +470,11 @@ extern "C" {
       rlts->list = NULL;
     }
 
+    // if max_len was configed, just use it
+    if (rlts->max_len > 0) {
+      len = rlts->max_len >= len ? len : rlts->max_len;
+    }
+
     CLuceneSearchResult *items = rlts->list;
     if (!items) {
       items = (CLuceneSearchResult*)malloc(sizeof(CLuceneSearchResult) * len);
@@ -490,9 +491,6 @@ extern "C" {
       p = doc.get(_T("path"));
       // _tprintf(p);
 
-      // item = (CLuceneSearchResult*)malloc(sizeof(CLuceneSearchResult));
-      // item->path = convert_wchar_to_mb((TCHAR*)p);
-      // items[i] = *item;
       items[i].path = convert_wchar_to_mb((TCHAR*)p);
       items[i].name = 0;
     }

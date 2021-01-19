@@ -66,6 +66,7 @@ typedef struct _CLuceneSearchResult {
 typedef struct _CLuceneSearchResults {
   CLuceneSearchResult* list;
   size_t len;
+  size_t max_len; /*config max length of the result list*/
 } CLuceneSearchResults;
 
 void clu_list_all_terms(const char* index_store_dir);
@@ -73,7 +74,7 @@ void clu_list_all_terms(const char* index_store_dir);
 /**
  * create search results 
  */
-CLuceneSearchResults* clu_create_search_results(size_t list_size, enum CLuError *err);
+CLuceneSearchResults* clu_create_search_results(size_t list_size, size_t max_size, enum CLuError *err);
 
 CLuceneSearchResults* clu_search(CLuceneSearchHandler* search_handler, CLuceneSearchResults* rlts, const char* query, enum CLuError *err);
 

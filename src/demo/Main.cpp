@@ -168,7 +168,7 @@ int main( int32_t argc, char** argv ){
     setlocale(LC_ALL, "");//zh_CN.UTF-8
 	cout << "after setting local to user prefered, current local is " << setlocale(LC_ALL, NULL) << endl;
 	char* mb = convert_wchar_to_mb(sythesized_buf);
-	cout << "mb=" << mb << "; strlen=" << strlen(mb) << endl;
+	cout << "mb=" << mb << "; strlen=" << strlen(mb) << "---->" << count_mb_of_wchr(sythesized_buf) << endl;
 	free(mb);
 
 	char* index_dir = (char*)"/Users/huangwei/code/prj/serve/nginx_root/clu_idx";
