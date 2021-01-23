@@ -486,13 +486,29 @@ extern "C" {
       }
     }
 
+    char* prop;
     for (size_t i = 0; i < len; i++) {
       Document& doc = h->doc(i);
       p = doc.get(_T("path"));
-      // _tprintf(p);
 
-      items[i].path = convert_wchar_to_mb((TCHAR*)p);
+      prop = items[i].path;
+
+      size_t p_size = count_mb_of_wchr((TCHAR*)p);
+      if (!prop) {
+        prop = (char*)calloc(1, p_size + 1);
+        if (!prop) {
+          *err = clu_err_no_mem;
+          break;
+        }
+      } else {
+        prop = (char*)realloc(prop, strlen(prop) + 1);
+      }
+      convert_wchar_to_mb((TCHAR*)p, prop);
+
+      items[i].path = prop;
       items[i].name = 0;
+
+      prop = nullptr;
     }
 
     rlts->len = len;

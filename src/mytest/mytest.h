@@ -10,6 +10,7 @@ enum CLuError {
   clu_err_no_err = 0,
   clu_err_index_not_found,
   clu_err_index_corupted,
+  clu_err_no_mem,
 };
 
 /**

@@ -63,13 +63,13 @@ char* convert_wchar_to_mb(TCHAR* wchr, char* result) {
     wchr++;
   }
 
-  size_t copy_len;
+  size_t copy_len = dat.size();
   if (!result) {
-    copy_len = dat.size();
+    // copy_len = dat.size();
     result = (char*)malloc(copy_len + 1);
-  } else {
+  }/* else {
     copy_len = strlen(result);
-  }
+  }*/
   strncpy(result, dat.c_str(), copy_len);
   result[copy_len] = '\0';
 
