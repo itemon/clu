@@ -193,20 +193,38 @@ int main( int32_t argc, char** argv ){
 
 	clu_list_all_terms(index_dir);
 
-	CLuceneSearchHandler* sh = clu_get_searcher(index_dir, NULL);
-	enum CLuError err;
-	cout << "before searching..." << endl;
-	CLuceneSearchResults* srlts = clu_search(sh, NULL, "lib_mod:vue", &err);//contents:黄伟, OR lib_mod:vue,
+    enum CLuError err;
+	CLuceneSearchResults* srlts = clu_create_search_results(10, 10, &err);
 
-	cout << "search results, size=" << srlts->len << "; results[0].name = " << srlts->list[0].path << endl;
+	CLuceneSearchHandler* sh = clu_get_searcher(index_dir, &err);
+
+#define SHOW_SEARCH_RLT(srlts) \
+  cout << "search for opengl, result size = " << srlts->len << ":";\
+  if (srlts->len > 0) {\
+  	cout << "result[0]=" << srlts->list[0].path;\
+  }\
+  cout << endl;
+
+	cout << "before searching..." << endl;
+	srlts = clu_search(sh, srlts, "lib_mod:vue", &err);//contents:黄伟, OR lib_mod:vue,
+	SHOW_SEARCH_RLT(srlts)
+
+	// cout << "search results, size=" << srlts->len << "; results[0].name = " << srlts->list[0].path << endl;
 	// cout << "search results done" << endl;
 
 	// perform another search
 	srlts = clu_search(sh, srlts, "name:OpenGL", &err);
-	cout << "...search results, size=" << srlts->len << endl;
+	SHOW_SEARCH_RLT(srlts)
+	// cout << "search for opengl, result size = " << srlts->len << ":";
+	// if (srlts->len > 0) {
+	//   cout << "result[0]=" << srlts->list[0].path;
+	// }
+	// cout << endl;
 
 	clu_free_searcher(sh);
 	clu_free_search_results(srlts);
+
+	// testing highlighter
 
 	uint64_t str = Misc::currentTimeMillis();
 

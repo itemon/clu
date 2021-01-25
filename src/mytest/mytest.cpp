@@ -13,6 +13,9 @@
 #include "CLucene/util/StringBuffer.h"
 
 #include "CLucene/analysis/LanguageBasedAnalyzer.h"
+#include "CLucene/highlighter/Highlighter.h"
+#include "CLucene/highlighter/QueryScorer.h"
+#include "CLucene/highlighter/SimpleFragmenter.h"
 
 #include "mytest.h"
 #include "tool.h"
@@ -27,6 +30,7 @@ using namespace lucene::analysis;
 using namespace lucene::analysis::standard;
 using namespace lucene::util;
 using namespace lucene::search;
+using namespace lucene::search::highlight;
 
 EXPORT void my_test_whisper() {
 #ifdef MYTEST_INC_FINGER
@@ -38,6 +42,12 @@ extern "C" {
   // declaring prototype of json parsing function
   void json_array_token(Document* doc, const char* json, jsmntok_t* all_tok, jsmntok_t* tok, size_t* i);
   void json_object_token(Document* doc, const char* json, jsmntok_t* all_tok, jsmntok_t* tok, size_t* i);
+
+  #define CHECK_AND_RTN_NO_MEM(ptr) \
+    if (unlikely(!ptr)) {\
+      *err = clu_err_no_mem;\
+      return nullptr;\
+    }
 
   EXPORT const char* clu_str_num() {
     return _CL_VERSION;
@@ -418,10 +428,19 @@ extern "C" {
 
   EXPORT CLuceneSearchResults* clu_create_search_results(size_t list_size, size_t max_size, enum CLuError *err) {
     CLuceneSearchResults* rlts = (CLuceneSearchResults*)malloc(sizeof(CLuceneSearchResults));
+    CHECK_AND_RTN_NO_MEM(rlts)
     rlts->len = list_size;
+
     CLuceneSearchResult* list = (CLuceneSearchResult*)malloc(sizeof(CLuceneSearchResult) * list_size);
+    CHECK_AND_RTN_NO_MEM(list)
+
+    for (size_t i = 0; i < list_size; ++i) {
+      list[i].path = nullptr;
+      list[i].name = nullptr;
+    }
     rlts->list = list;
     rlts->max_len = max_size;
+
     return rlts;
   }
 
@@ -450,24 +469,32 @@ extern "C" {
     size_t len;
     CVT_CHR_TO_WCHAR(query, qry)
 
-    const TCHAR* inquiry = wchr_qry;
+    // const TCHAR* inquiry = wchr_qry;
     LanguageBasedAnalyzer an;
     an.setLanguage(_T("cjk"));
 
     QueryParser parser(_T("contents"), &an);
-    Query* q = parser.parse(inquiry);
+    Query* q = parser.parse(wchr_qry);
     
     Hits* h = s->search(q);
     len = h->length();
 
     const TCHAR* p;
 
+    // char* helleworld = "the quick fox jumps over lazy dog";
+    Term term(_T("name"), wchr_qry);
+    TermQuery term_query(&term);
+    QueryScorer scorer(&term_query);//, s->getReader(), _T("name")
+    SimpleFragmenter frag;
+    Highlighter hl(&scorer);
+    hl.setTextFragmenter(&frag);
+
     // allocate memory for result stucture
     // we'll try to reuse memory for frequently search request
     // scene
     if (rlts == NULL) {
-      rlts = (CLuceneSearchResults*)malloc(sizeof(CLuceneSearchResults));
-      rlts->list = NULL;
+      *err = clu_err_param_is_nptr;
+      return nullptr;
     }
 
     // if max_len was configed, just use it
@@ -476,36 +503,59 @@ extern "C" {
     }
 
     CLuceneSearchResult *items = rlts->list;
-    if (!items) {
+    if (unlikely(!items)) {
+      *err = clu_err_param_is_nptr;
+      return nullptr;
+    }
+    /*if (!items) {
       items = (CLuceneSearchResult*)malloc(sizeof(CLuceneSearchResult) * len);
     } else {
-      // std::cout << "debug brk" << rlts->list << std::endl;
       if (len > rlts->len) {
         // reallocate memory
         items = (CLuceneSearchResult*)realloc(rlts->list, len);
       }
-    }
+    }*/
+
+  #define DECODE_CHR_FROM_TCHR() \
+    size_t p_size = count_mb_of_wchr((TCHAR*)p);\
+    if (!prop) {\
+      prop = (char*)calloc(1, p_size + 1);\
+      if (!prop) {\
+        *err = clu_err_no_mem;\
+        break;\
+      }\
+    } else {\
+      prop = (char*)realloc(prop, strlen(prop) + 1);\
+    }\
+    convert_wchar_to_mb((TCHAR*)p, prop);
 
     char* prop;
     for (size_t i = 0; i < len; i++) {
       Document& doc = h->doc(i);
       p = doc.get(_T("path"));
-
       prop = items[i].path;
 
-      size_t p_size = count_mb_of_wchr((TCHAR*)p);
-      if (!prop) {
-        prop = (char*)calloc(1, p_size + 1);
-        if (!prop) {
-          *err = clu_err_no_mem;
-          break;
-        }
-      } else {
-        prop = (char*)realloc(prop, strlen(prop) + 1);
-      }
-      convert_wchar_to_mb((TCHAR*)p, prop);
+      // size_t p_size = count_mb_of_wchr((TCHAR*)p);
+      // if (!prop) {
+      //   prop = (char*)calloc(1, p_size + 1);
+      //   if (!prop) {
+      //     *err = clu_err_no_mem;
+      //     break;
+      //   }
+      // } else {
+      //   prop = (char*)realloc(prop, strlen(prop) + 1);
+      // }
+      // convert_wchar_to_mb((TCHAR*)p, prop);
+      DECODE_CHR_FROM_TCHR()
 
       items[i].path = prop;
+
+      p = doc.get(_T("name"));
+      if (p) {
+        cout << "using highlighting...";
+        cout << hl.getBestFragment(&an, _T("name"), p);
+        cout << endl;
+      }
       items[i].name = 0;
 
       prop = nullptr;

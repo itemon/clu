@@ -8,3 +8,6 @@ char* convert_wchar_to_mb(TCHAR* wchr, char* result = nullptr);
 size_t count_mb_of_wchr(TCHAR* wchr);
 
 bool str_end_with(const char* str, const char* sub);
+
+#define likely(x)       __builtin_expect((x),1)
+#define unlikely(x)     __builtin_expect((x),0)

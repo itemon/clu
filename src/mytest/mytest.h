@@ -11,6 +11,7 @@ enum CLuError {
   clu_err_index_not_found,
   clu_err_index_corupted,
   clu_err_no_mem,
+  clu_err_param_is_nptr,
 };
 
 /**
