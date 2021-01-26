@@ -482,7 +482,7 @@ extern "C" {
     const TCHAR* p;
 
     // char* helleworld = "the quick fox jumps over lazy dog";
-    Term term(_T("name"), wchr_qry);
+    Term term(_T("contents"), wchr_qry);
     TermQuery term_query(&term);
     QueryScorer scorer(&term_query);//, s->getReader(), _T("name")
     SimpleFragmenter frag;
@@ -532,28 +532,16 @@ extern "C" {
     char* prop;
     for (size_t i = 0; i < len; i++) {
       Document& doc = h->doc(i);
+
       p = doc.get(_T("path"));
       prop = items[i].path;
-
-      // size_t p_size = count_mb_of_wchr((TCHAR*)p);
-      // if (!prop) {
-      //   prop = (char*)calloc(1, p_size + 1);
-      //   if (!prop) {
-      //     *err = clu_err_no_mem;
-      //     break;
-      //   }
-      // } else {
-      //   prop = (char*)realloc(prop, strlen(prop) + 1);
-      // }
-      // convert_wchar_to_mb((TCHAR*)p, prop);
       DECODE_CHR_FROM_TCHR()
-
       items[i].path = prop;
 
-      p = doc.get(_T("name"));
+      p = doc.get(_T("contents"));
       if (p) {
         cout << "using highlighting...";
-        cout << hl.getBestFragment(&an, _T("name"), p);
+        cout << hl.getBestFragment(&an, _T("contents"), p);
         cout << endl;
       }
       items[i].name = 0;
