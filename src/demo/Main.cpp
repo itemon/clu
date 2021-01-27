@@ -213,7 +213,7 @@ int main( int32_t argc, char** argv ){
 	// cout << "search results done" << endl;
 
 	// perform another search
-	srlts = clu_search(sh, srlts, "name:OpenGL", &err);
+	srlts = clu_search(sh, srlts, "contents:function", &err);
 	SHOW_SEARCH_RLT(srlts)
 	// cout << "search for opengl, result size = " << srlts->len << ":";
 	// if (srlts->len > 0) {

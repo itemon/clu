@@ -482,7 +482,7 @@ extern "C" {
     const TCHAR* p;
 
     // char* helleworld = "the quick fox jumps over lazy dog";
-    Term term(_T("contents"), wchr_qry);
+    Term term(_T("contents"), _T("function"));
     TermQuery term_query(&term);
     QueryScorer scorer(&term_query);//, s->getReader(), _T("name")
     SimpleFragmenter frag;
@@ -541,7 +541,9 @@ extern "C" {
       p = doc.get(_T("contents"));
       if (p) {
         cout << "using highlighting...";
-        cout << hl.getBestFragment(&an, _T("contents"), p);
+        TCHAR* hl_rlt = hl.getBestFragment(&an, _T("contents"), p);
+        // _tprintf(hl_rlt);
+        cout << hl_rlt;
         cout << endl;
       }
       items[i].name = 0;
