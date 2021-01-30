@@ -63,6 +63,7 @@ void clu_free_searcher(CLuceneSearchHandler* search_handler);
 typedef struct _CLuceneSearchResult {
   char* name;
   char* path;
+  char* content;
 } CLuceneSearchResult;
 
 typedef struct _CLuceneSearchResults {

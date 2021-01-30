@@ -199,13 +199,16 @@ int main( int32_t argc, char** argv ){
 	CLuceneSearchHandler* sh = clu_get_searcher(index_dir, &err);
 
 #define SHOW_SEARCH_RLT(srlts) \
-  cout << "search for opengl, result size = " << srlts->len << ":";\
-  if (srlts->len > 0) {\
-  	cout << "result[0]=" << srlts->list[0].path;\
-  }\
-  cout << endl;
+  cout << "result size = " << srlts->len << ":" << endl;\
+  for (size_t i = 0; i < srlts->len; ++i) {\
+	cout << "path: " << srlts->list[i].path << endl;\
+	if (srlts->list[i].content) {\
+	cout << "matching content " << srlts->list[i].content << endl;\
+	}\
+	cout << "-----------" << endl;\
+  }
 
-	cout << "before searching..." << endl;
+	cout << "search for lib_mod:vue" << endl;
 	srlts = clu_search(sh, srlts, "lib_mod:vue", &err);//contents:黄伟, OR lib_mod:vue,
 	SHOW_SEARCH_RLT(srlts)
 
@@ -213,8 +216,10 @@ int main( int32_t argc, char** argv ){
 	// cout << "search results done" << endl;
 
 	// perform another search
-	srlts = clu_search(sh, srlts, "contents:function", &err);
+	cout << "search for OpenGL" << endl;
+	srlts = clu_search(sh, srlts, "OpenGL", &err);//"contents:Safari"
 	SHOW_SEARCH_RLT(srlts)
+	
 	// cout << "search for opengl, result size = " << srlts->len << ":";
 	// if (srlts->len > 0) {
 	//   cout << "result[0]=" << srlts->list[0].path;

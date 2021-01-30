@@ -420,6 +420,9 @@ extern "C" {
         free(r.name);
       if (r.path != NULL)
         free(r.path);
+      if (r.content != NULL) {
+        free(r.content);
+      }
       ++i;
     }
     free(results->list);
@@ -437,6 +440,7 @@ extern "C" {
     for (size_t i = 0; i < list_size; ++i) {
       list[i].path = nullptr;
       list[i].name = nullptr;
+      list[i].content = nullptr;
     }
     rlts->list = list;
     rlts->max_len = max_size;
@@ -482,9 +486,9 @@ extern "C" {
     const TCHAR* p;
 
     // char* helleworld = "the quick fox jumps over lazy dog";
-    Term term(_T("contents"), _T("function"));
-    TermQuery term_query(&term);
-    QueryScorer scorer(&term_query);//, s->getReader(), _T("name")
+    // Term term(_T("contents"), _T("function"));
+    // TermQuery term_query(&term);
+    QueryScorer scorer(q);
     SimpleFragmenter frag;
     Highlighter hl(&scorer);
     hl.setTextFragmenter(&frag);
@@ -530,25 +534,48 @@ extern "C" {
     convert_wchar_to_mb((TCHAR*)p, prop);
 
     char* prop;
+    bool has_prop;
+
     for (size_t i = 0; i < len; i++) {
       Document& doc = h->doc(i);
-
+      
       p = doc.get(_T("path"));
       prop = items[i].path;
       DECODE_CHR_FROM_TCHR()
       items[i].path = prop;
 
       p = doc.get(_T("contents"));
+      has_prop = false;
       if (p) {
-        cout << "using highlighting...";
-        TCHAR* hl_rlt = hl.getBestFragment(&an, _T("contents"), p);
-        // _tprintf(hl_rlt);
-        cout << hl_rlt;
-        cout << endl;
+        p = hl.getBestFragment(&an, _T("contents"), p);
+        if (p) {
+          prop = items[i].content;
+          DECODE_CHR_FROM_TCHR()
+          items[i].content = prop;
+          has_prop = true;
+        }
       }
-      items[i].name = 0;
+      if (!has_prop && items[i].content != NULL) {
+        // mark this item useless by using strlen testing
+        items[i].content[0] = '\0';
+      }
 
-      prop = nullptr;
+      p = doc.get(_T("name"));
+      has_prop = false;
+      if (p) {
+        _tprintf(p);
+        printf("\n\n");
+        p = hl.getBestFragment(&an, _T("name"), p);
+        if (p) {
+          prop = items[i].name;
+          DECODE_CHR_FROM_TCHR()
+          items[i].name = prop;
+          has_prop = true;
+        }
+      }
+      if (!has_prop && items[i].name != NULL) {
+        items[i].name[0] = '\0';
+      }
     }
 
     rlts->len = len;
