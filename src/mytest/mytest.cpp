@@ -43,6 +43,9 @@ extern "C" {
   void json_array_token(Document* doc, const char* json, jsmntok_t* all_tok, jsmntok_t* tok, size_t* i);
   void json_object_token(Document* doc, const char* json, jsmntok_t* all_tok, jsmntok_t* tok, size_t* i);
 
+  #define UNSET_CHR '\0'
+  #define SET_CHR '\1'
+
   #define CHECK_AND_RTN_NO_MEM(ptr) \
     if (unlikely(!ptr)) {\
       *err = clu_err_no_mem;\
@@ -534,11 +537,67 @@ extern "C" {
     convert_wchar_to_mb((TCHAR*)p, prop);
 
     char* prop;
-    bool has_prop;
+    // bool has_prop;
+
+    char name_set = UNSET_CHR;
+    char path_set = UNSET_CHR;
+    char contents_set = UNSET_CHR;
 
     for (size_t i = 0; i < len; i++) {
       Document& doc = h->doc(i);
-      
+
+      const Document::FieldsType* flds = doc.getFields();
+      for (Document::FieldsType::const_iterator j = flds->begin(); j != flds->end(); j++) {
+        const TCHAR* fld_name = (*j)->name();
+        const TCHAR* fld_val = (*j)->stringValue();
+
+        if (_tcscmp(fld_name, _T("name")) == 0) {
+          if (name_set == UNSET_CHR) {
+            if (fld_val) {
+              p = hl.getBestFragment(&an, _T("name"), fld_val);
+              if (p) {
+                prop = items[i].name;
+                DECODE_CHR_FROM_TCHR()
+                items[i].name = prop;
+                // printf("name highlighting was set for %s\n", prop);
+                name_set = SET_CHR;
+                _CLDELETE_LARRAY((TCHAR*)p)
+              }
+            }
+
+            if (name_set == UNSET_CHR && items[i].name != NULL) {
+              items[i].name[0] = '\0';
+            }
+          }
+        } else if (_tcscmp(fld_name, _T("contents")) == 0) {
+          if (contents_set == UNSET_CHR) {
+            // p = doc.get(_T("contents"));
+            if (fld_val) {
+              p = hl.getBestFragment(&an, _T("contents"), fld_val);
+              if (p) {
+                prop = items[i].content;
+                DECODE_CHR_FROM_TCHR()
+                items[i].content = prop;
+                // printf("contents highlighting was set for %s\n", prop);
+                contents_set = SET_CHR;
+                _CLDELETE_LARRAY((TCHAR*)p)
+              }
+            }
+
+            if (contents_set == UNSET_CHR && items[i].content != NULL) {
+              items[i].content[0] = '\0';
+            }
+          }
+        } else if (_tcscmp(fld_name, _T("path")) == 0) {
+          p = fld_val;
+          prop = items[i].path;
+          DECODE_CHR_FROM_TCHR()
+          items[i].path = prop;
+          // printf("path %s was set\n", prop);
+        }
+
+      }
+      /*
       p = doc.get(_T("path"));
       prop = items[i].path;
       DECODE_CHR_FROM_TCHR()
@@ -563,8 +622,6 @@ extern "C" {
       p = doc.get(_T("name"));
       has_prop = false;
       if (p) {
-        _tprintf(p);
-        printf("\n\n");
         p = hl.getBestFragment(&an, _T("name"), p);
         if (p) {
           prop = items[i].name;
@@ -576,6 +633,7 @@ extern "C" {
       if (!has_prop && items[i].name != NULL) {
         items[i].name[0] = '\0';
       }
+      */
     }
 
     rlts->len = len;

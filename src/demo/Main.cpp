@@ -25,6 +25,7 @@
 #include <string.h>
 #include <libgen.h>
 #include <sstream>
+#include <locale>
 
 #include "mytest.h"
 #include "jsmn.h"
@@ -165,7 +166,10 @@ int main( int32_t argc, char** argv ){
             };
 
     cout << "before setting locale, previous locale is " << setlocale(LC_ALL, NULL) << endl;
+
     setlocale(LC_ALL, "");//zh_CN.UTF-8
+	std::wcout.imbue(std::locale("zh_CN.UTF-8"));
+
 	cout << "after setting local to user prefered, current local is " << setlocale(LC_ALL, NULL) << endl;
 	char* mb = convert_wchar_to_mb(sythesized_buf);
 	cout << "mb=" << mb << "; strlen=" << strlen(mb) << "---->" << count_mb_of_wchr(sythesized_buf) << endl;
@@ -203,21 +207,24 @@ int main( int32_t argc, char** argv ){
   for (size_t i = 0; i < srlts->len; ++i) {\
 	cout << "path: " << srlts->list[i].path << endl;\
 	if (srlts->list[i].content) {\
-	cout << "matching content " << srlts->list[i].content << endl;\
+	  cout << "matching content " << srlts->list[i].content << endl;\
+	}\
+	if (srlts->list[i].name) {\
+	  cout << "matching name " << srlts->list[i].name << endl;\
 	}\
 	cout << "-----------" << endl;\
   }
 
-	cout << "search for lib_mod:vue" << endl;
+	/*cout << "search for lib_mod:vue" << endl;
 	srlts = clu_search(sh, srlts, "lib_mod:vue", &err);//contents:黄伟, OR lib_mod:vue,
-	SHOW_SEARCH_RLT(srlts)
+	SHOW_SEARCH_RLT(srlts)*/
 
 	// cout << "search results, size=" << srlts->len << "; results[0].name = " << srlts->list[0].path << endl;
 	// cout << "search results done" << endl;
 
 	// perform another search
 	cout << "search for OpenGL" << endl;
-	srlts = clu_search(sh, srlts, "OpenGL", &err);//"contents:Safari"
+	srlts = clu_search(sh, srlts, "file", &err);//"contents:Safari"
 	SHOW_SEARCH_RLT(srlts)
 	
 	// cout << "search for opengl, result size = " << srlts->len << ":";
