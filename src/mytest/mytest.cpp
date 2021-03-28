@@ -65,8 +65,8 @@ extern "C" {
       IndexReader::unlock(index_store_dir);
     }
 
-    LanguageBasedAnalyzer* an = _CLNEW LanguageBasedAnalyzer(_T("cjk"));
-    // StandardAnalyzer* san = _CLNEW StandardAnalyzer();
+    LanguageBasedAnalyzer* an = _CLNEW LanguageBasedAnalyzer(_T("cjk"));//
+    // StandardAnalyzer* an = _CLNEW StandardAnalyzer();
 
     index_writer = _CLNEW IndexWriter(index_store_dir, an, startover || !has_index);
     index_writer->setMaxFieldLength(0x7FFFFFFFL);
@@ -477,8 +477,10 @@ extern "C" {
     CVT_CHR_TO_WCHAR(query, qry)
 
     // const TCHAR* inquiry = wchr_qry;
+
     LanguageBasedAnalyzer an;
     an.setLanguage(_T("cjk"));
+    // StandardAnalyzer an;
 
     QueryParser parser(_T("contents"), &an);
     Query* q = parser.parse(wchr_qry);
