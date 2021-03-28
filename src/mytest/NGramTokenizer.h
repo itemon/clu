@@ -10,6 +10,11 @@ namespace mytest {
   class CLUCENE_CONTRIBS_EXPORT NGramTokenizer : public lucene::analysis::Tokenizer {
     private:
       int32_t min_gram_size, max_gram_size;
+      // offset to point position
+      int32_t offset;
+
+      TCHAR buffer[LUCENE_MAX_WORD_LEN+1];
+	  const TCHAR* ioBuffer;
 
     public:
       Token* next(Token* token);
