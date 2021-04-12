@@ -9,9 +9,12 @@ using lucene::analysis::Token;
 namespace mytest {
   class CLUCENE_CONTRIBS_EXPORT NGramTokenizer : public lucene::analysis::Tokenizer {
     private:
-      int32_t min_gram_size, max_gram_size;
+      int32_t min_gram_size, max_gram_size, dataLen, bufferIndex;
       // offset to point position
       int32_t offset;
+
+      int32_t ngram_sess_begin, ngram_sess_len, ngram_cur, ngram_cur_len;
+      TCHAR ngram_buffer[LUCENE_MAX_WORD_LEN];
 
       TCHAR buffer[LUCENE_MAX_WORD_LEN+1];
 	  const TCHAR* ioBuffer;
@@ -23,6 +26,8 @@ namespace mytest {
 
       ~NGramTokenizer();
       NGramTokenizer(int32_t min_gram_size_, int32_t max_gram_size_, lucene::util::Reader* _input);
+
+    //   friend class lucene::analysis::Tokenizer;
   };
 }
 
