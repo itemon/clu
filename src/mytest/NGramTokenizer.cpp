@@ -15,6 +15,12 @@ namespace mytest {
     bufferIndex(0),
     ioBuffer(NULL),
     offset(0),
+
+    ngram_sess_begin(0),
+    ngram_sess_len(0),
+    ngram_cur(0),
+    ngram_cur_len(0),
+
     Tokenizer(_input) {
     // customizing costruction
     // offset = 3;
@@ -28,14 +34,35 @@ namespace mytest {
 
   Token* NGramTokenizer::next(Token* token) {
 
-    if (ngram_sess_begin >= 0 && ngram_sess_len > 0 && ngram_cur_len <= ngram_sess_len) {
-      ngram_buffer[0] = buffer[ngram_cur];
-      ngram_buffer[1] = '\0';
-      token->set(ngram_buffer, ngram_cur, ngram_cur + 1);
-      ngram_sess_begin = 0;
-      ngram_sess_len = 0;
-      ngram_cur_len = 0;
-      return token;
+    if (ngram_sess_begin >= 0 && ngram_sess_len > 0) {
+      // ngram_buffer[0] = buffer[ngram_cur];
+      // ngram_buffer[1] = '\0';
+      // token->set(ngram_buffer, ngram_cur, ngram_cur + 1);
+
+      if (ngram_cur_len <= ngram_sess_len) {
+        // token->set(buffer, ngram_sess_begin + ngram_cur, ngram_sess_begin + ngram_cur + ngram_cur_len);
+        
+        int32_t copy_len;
+        for (int32_t from = ngram_cur, to = ngram_cur + ngram_cur_len; from < to; ++from) {
+          ngram_buffer[copy_len++] = buffer[from];
+        }
+        ngram_buffer[copy_len] = '\0';
+        token->set(ngram_buffer, 0, copy_len);
+
+        ++ngram_cur;
+        // 0 1 2 3 4 5 6 7 8
+        //     2 3 4
+
+        if (ngram_sess_begin + ngram_cur + ngram_cur_len > ngram_sess_begin + ngram_sess_len) {
+          ngram_cur = 0;
+          ++ngram_cur_len;
+        }
+
+        return token;
+      } else {
+        ngram_sess_begin = 0;
+        ngram_sess_len = 0;
+      }
     }
 
     int32_t length = 0;
@@ -79,7 +106,7 @@ namespace mytest {
     token->set(buffer, start, start + length);
 
     // start using ngram
-    if (length >= min_gram_size && length > 0) {
+    if (length > 0 && length >= min_gram_size) {
       ngram_sess_begin = start;
       ngram_sess_len = length;
       ngram_cur = 0;
