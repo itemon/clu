@@ -31,8 +31,14 @@
 #include "jsmn.h"
 #include "tool.h"
 
+// #include "CJKAnalyzer.h"
+#include "CLucene/analysis/LanguageBasedAnalyzer.h"
+#include "CLucene/util/CLStreams.h"
+#include "NGramAnalyzer.h"
+
 using namespace std;
 using namespace lucene::util;
+using mytest::NGramAnalyzer;
 
 //void DeleteFiles(const char* dir);
 void IndexFiles(const char* path, const char* target, const bool clearIndex);
@@ -125,6 +131,42 @@ static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
   return -1;
 }
 
+void testing_analyzer() {
+	TCHAR sythesized_buf[9] = {
+                0x9ec4,
+                0x4f1f,
+                0x20,
+                0x73, 
+                0x74, 
+                0x6f, 
+                0x72, 
+                0x79,
+                0x0,
+            };
+	StringReader reader(sythesized_buf);
+	lucene::analysis::LanguageBasedAnalyzer an;
+	an.setLanguage(_T("cjk"));
+	lucene::analysis::Token token;
+
+	lucene::analysis::TokenStream* stream = an.tokenStream(NULL, &reader);
+	
+	while (stream->next(&token)) {
+    std::wcout << "offset: " << token.startOffset() << "->" << token.endOffset() << endl;
+	}
+
+	reader.reset(0);
+
+	NGramAnalyzer gram_analyzer(2, 3);
+	using TokenStream = lucene::analysis::TokenStream;
+	using Token = lucene::analysis::Token;
+
+	TokenStream* ts = gram_analyzer.tokenStream(nullptr, &reader);
+	while (ts->next(&token)) {
+		_tprintf(token.termBuffer());
+		wcout << " token is " << token.termBuffer() << "-" << token.startOffset() << ":" << token.endOffset() << endl;
+	}
+}
+
 int main( int32_t argc, char** argv ){
 	//Dumper Debug
 	#ifdef _MSC_VER
@@ -164,7 +206,6 @@ int main( int32_t argc, char** argv ){
                 0x79,
                 0x0,
             };
-	cout << "really wchar_t str size is " << sizeof(TCHAR) << endl;
 
     cout << "before setting locale, previous locale is " << setlocale(LC_ALL, NULL) << endl;
 
@@ -176,7 +217,7 @@ int main( int32_t argc, char** argv ){
 	cout << "mb=" << mb << "; strlen=" << strlen(mb) << "---->" << count_mb_of_wchr(sythesized_buf) << endl;
 	free(mb);
 
-	char* index_dir = (char*)"/Users/huangwei/code/prj/serve/nginx_root/clu_idx";
+	char* index_dir = (char*)"/Users/huangwei/code/prjs/guazi/clu_idx/index";
 	cout << clu_str_num() << endl;
 
     /**/CLuceneIndexHandler* h = clu_get_index_handler(index_dir, NULL, true);
@@ -188,7 +229,7 @@ int main( int32_t argc, char** argv ){
       .tag_size = 1
     };
 
-	char* files_dir = (char*)"/Users/huangwei/code/prj/serve/nginx_root/zh";
+	char* files_dir = (char*)"/Users/huangwei/code/prjs/guazi/clu_idx/files";
 
     clu_add_doc_to_index_handler(h, files_dir, &doc_config);
     clu_optimize_index_handler(h);
@@ -224,8 +265,8 @@ int main( int32_t argc, char** argv ){
 	// cout << "search results done" << endl;
 
 	// perform another search
-	cout << "search for acos" << endl;
-	srlts = clu_search(sh, srlts, "文字,", &err);//"contents:Safari"
+	cout << "search for OpenGL" << endl;
+	srlts = clu_search(sh, srlts, "Dog", &err);//"contents:Safari"
 	SHOW_SEARCH_RLT(srlts)
 	
 	// cout << "search for opengl, result size = " << srlts->len << ":";
@@ -236,6 +277,8 @@ int main( int32_t argc, char** argv ){
 
 	clu_free_searcher(sh);
 	clu_free_search_results(srlts);
+
+	testing_analyzer();
 
 	// testing highlighter
 
