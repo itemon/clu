@@ -164,6 +164,7 @@ int main( int32_t argc, char** argv ){
                 0x79,
                 0x0,
             };
+	cout << "really wchar_t str size is " << sizeof(TCHAR) << endl;
 
     cout << "before setting locale, previous locale is " << setlocale(LC_ALL, NULL) << endl;
 
@@ -223,8 +224,8 @@ int main( int32_t argc, char** argv ){
 	// cout << "search results done" << endl;
 
 	// perform another search
-	cout << "search for OpenGL" << endl;
-	srlts = clu_search(sh, srlts, "file", &err);//"contents:Safari"
+	cout << "search for acos" << endl;
+	srlts = clu_search(sh, srlts, "文字,", &err);//"contents:Safari"
 	SHOW_SEARCH_RLT(srlts)
 	
 	// cout << "search for opengl, result size = " << srlts->len << ":";
