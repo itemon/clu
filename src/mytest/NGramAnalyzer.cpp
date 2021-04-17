@@ -9,7 +9,7 @@ using lucene::analysis::TokenStream;
 
 namespace mytest {
   TokenStream* NGramAnalyzer::tokenStream(const TCHAR* fieldName, CL_NS(util)::Reader* reader) {
-    return _CLNEW mytest::NGramTokenizer(min_gram_size, max_gram_size, reader);
+    return _CLNEW mytest::NGramTokenizer(min_gram_size, max_gram_size, reader->__asBufferedReader());
   }
 
   NGramAnalyzer::NGramAnalyzer(int32_t min_gram_size_, int32_t max_gram_size_) : 
