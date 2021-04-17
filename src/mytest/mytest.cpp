@@ -20,6 +20,8 @@
 #include "mytest.h"
 #include "tool.h"
 #include "jsmn.h"
+#include "NGramAnalyzer.h"
+#include "NGramTokenizer.h"
 
 #define EXPORT __attribute__((visibility("default")))
 
@@ -70,7 +72,8 @@ extern "C" {
     // LanguageBasedAnalyzer an;
     // an.setLanguage(_T("cjk"));
 
-    StandardAnalyzer* an = _CLNEW StandardAnalyzer();
+    // StandardAnalyzer* an = _CLNEW StandardAnalyzer();
+    mytest::NGramAnalyzer* an = _CLNEW mytest::NGramAnalyzer(2, 4);
 
     index_writer = _CLNEW IndexWriter(index_store_dir, an, startover || !has_index);
     index_writer->setMaxFieldLength(0x7FFFFFFFL);
@@ -484,6 +487,7 @@ extern "C" {
     // an.setLanguage(_T("cjk"));
 
     StandardAnalyzer an;
+    // mytest::NGramAnalyzer an(2, 4);
 
     QueryParser parser(_T("contents"), &an);
     Query* q = parser.parse(wchr_qry);

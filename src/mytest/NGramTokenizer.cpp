@@ -47,7 +47,8 @@ namespace mytest {
           ngram_buffer[copy_len++] = buffer[from];
         }
         ngram_buffer[copy_len] = '\0';
-        token->set(ngram_buffer, 0, copy_len);
+        // token->set(ngram_buffer, 0, copy_len);
+        token->set(ngram_buffer, ngram_cur + ngram_sess_begin, ngram_sess_begin + ngram_cur + ngram_cur_len);
 
         ++ngram_cur;
         // 0 1 2 3 4 5 6 7 8

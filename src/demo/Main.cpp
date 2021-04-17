@@ -266,7 +266,7 @@ int main( int32_t argc, char** argv ){
 
 	// perform another search
 	cout << "search for OpenGL" << endl;
-	srlts = clu_search(sh, srlts, "Dog", &err);//"contents:Safari"
+	srlts = clu_search(sh, srlts, "ju", &err);//"contents:Safari"
 	SHOW_SEARCH_RLT(srlts)
 	
 	// cout << "search for opengl, result size = " << srlts->len << ":";

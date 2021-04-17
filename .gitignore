@@ -12,3 +12,4 @@ build
 build-name
 .vscode
 .editorconfig
+.DS_Store
